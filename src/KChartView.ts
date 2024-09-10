@@ -2,35 +2,34 @@
     //这个类库提供了一个灵活的网页版框架，用于创建股票K线图。你可以根据需要自定义图表的布局、数据和样式。
     //股票图表的视图。它包含一个ICanvas用于绘制图形，以及一个IFrame用于管理图表的布局。它还提供了一些事件处理方法，如OnSizeChanged、OnKeyDown等。
     export class StockChartView implements IChartElement {
-        public MouseClick: MouseEventHandler;
-        public MouseDoubleClick: MouseEventHandler;
-        public MouseMove: MouseEventHandler;
-        public MouseDown: MouseEventHandler;
-        public MouseUp: MouseEventHandler;
-        public MouseLeave: EventHandler;
-        public MouseEnter: EventHandler;
-        public KeyDown: KeyEventHandler;
-        public KeyUp: KeyEventHandler;
+        public MouseClick: MouseEventHandler = null;
+        public MouseDoubleClick: MouseEventHandler = null;
+        public MouseMove: MouseEventHandler = null;
+        public MouseDown: MouseEventHandler = null;
+        public MouseUp: MouseEventHandler = null;
+        public MouseLeave: EventHandler = null;
+        public MouseEnter: EventHandler = null;
+        public KeyDown: KeyEventHandler = null;
+        public KeyUp: KeyEventHandler = null;
 
-        public PanelSelectChanged: PanelSelectChangedHandler;
-        public FocusedRecordChanged: FocusedChangedHandler;
-        public CrosshairVisibleChanged: CrosshairVisibleChangedHandler;
-        public PanelContextMenu: PanelContextMenuHandler;
-        public StatisticContextMenu: StatisticContextMenuHandler;
-        public PatternDbClick: PatternDbClickHandler;
-        public PanelTitleDbClick: PanelTitleDbClickHandler;
-        public AuxPaintFinished: AuxPaintFinishedHandler;
+        public PanelSelectChanged: PanelSelectChangedHandler = null;
+        public FocusedRecordChanged: FocusedChangedHandler = null;
+        public CrosshairVisibleChanged: CrosshairVisibleChangedHandler = null;
+        public PanelContextMenu: PanelContextMenuHandler = null;
+        public StatisticContextMenu: StatisticContextMenuHandler = null;
+        public PatternDbClick: PatternDbClickHandler = null;
+        public PanelTitleDbClick: PanelTitleDbClickHandler = null;
+        public AuxPaintFinished: AuxPaintFinishedHandler = null;
 
-        public Width: number;
-        public Height: number;
-        public Graphics: IGraphics;
-        public Source: CompactSeries;
-        public FocusInfo: FocusRecordInfo;
+        public Width: number = null;
+        public Height: number = null;
+        public Graphics: IGraphics = null;
+        public Source: CompactSeries = null;
+        public FocusInfo: FocusRecordInfo = null;
         public ChartType: ChartType = ChartType.Day;
-        public DataID: string;
-        public ToolTip: StockToolTip;
-        //public AuxTool: PaintLineTool;
-        //public AuxLines: AuxlineStruct[]; 
+        public DataID: string = null;
+        public ToolTip: StockToolTip = null;
+        //public AuxLines: AuxlineStruct[]=null; 
         public PanInterval: number = 1;
 
         private _view: DataView;
@@ -52,6 +51,17 @@
             this._frame.ParentVisualComponent = this;
             if (this._inited) {
                 this._frame.InitializeComponent();
+            }
+        }
+        protected _auxTool: PaintLineTool;
+        public get AuxTool(): PaintLineTool {
+            return this._auxTool;
+        }
+        public set AuxTool(auxTool: PaintLineTool) {
+            this._auxTool = auxTool;
+            this._auxTool.ParentVisualComponent = this;
+            if (this._inited) {
+                this._auxTool.InitializeComponent();
             }
         }
 
@@ -107,10 +117,14 @@
                 this.ToolTip = new StockToolTip();
             if (Utils.isNull(this.FocusInfo))
                 this.FocusInfo = new FocusRecordInfo(this);
+            if (Utils.isNull(this.AuxTool)) {
+                this.AuxTool = new PaintLineTool();
+            }
 
             this.Frame.InitializeComponent();
             this.View.InitializeComponent();
-
+            this.AuxTool.InitializeComponent();
+            this.AuxTool.PaintFinished = this.AuxiliaryLineTool_PaintFinished;
             this._inited = true;
         }
 
@@ -128,10 +142,10 @@
 
         public DoLayout(): void {
             if ((this.Width != 0) && (this.Height != 0)) {
-                //this.AuxTool.Width = this.Canvas.Size.Width;
-                //this.AuxTool.Height = this.Canvas.Size.Height;
-                //this.AuxTool.LocationA = new Point(0, 0);
-                //this.AuxTool.DoLayout();
+                this.AuxTool.Width = this.Width;
+                this.AuxTool.Height = this.Height;
+                this.AuxTool.LocationA = new Point(0, 0);
+                this.AuxTool.DoLayout();
 
                 this.Frame.Width = this.Width;
                 this.Frame.Height = this.Height;
@@ -140,7 +154,7 @@
 
                 this.View.WorkAreaWidth = this.Frame.DataViewWidth;
 
-                //this.AuxTool.AfterDoLayout();
+                this.AuxTool.AfterDoLayout();
                 this.Frame.AfterDoLayout();
             }
             this.Refresh();
@@ -323,6 +337,8 @@
                         g.DrawImage(this._bufferImage, this.Width, this.Height);
                     }
 
+                    this.AuxTool.OnPaint(g);
+
                     this.Frame.OnPaintFloatingLayer(g);
 
                     if (this.ToolTip.Display)
@@ -340,7 +356,8 @@
             this._mouseDownLocation = new Point(e.X, e.Y);
 
             this.Frame.OnMouseDown(e);
-            //this.AuxTool.OnMouseDown(e);
+            if (e.CancelBubbling == 0)
+                this.AuxTool.OnMouseDown(e);
 
 
         }
@@ -349,7 +366,8 @@
             e.CancelBubbling = 0;
 
             this.Frame.OnMouseUp(e);
-            //this.AuxTool.OnMouseUp(e);
+            if (e.CancelBubbling == 0)
+                this.AuxTool.OnMouseUp(e);
         }
 
         public OnKeyUp(sender: any, e: KeyEventArgs): void {
@@ -413,25 +431,27 @@
                 }
                 else if (this._cursorPosition.X != e.X || this._cursorPosition.Y != e.Y) {
                     this.Frame.OnMouseMove(e);
-                    //this.AuxTool.OnMouseMove(e);
+                    if (e.CancelBubbling == 0)
+                        this.AuxTool.OnMouseMove(e);
+                    if (e.CancelBubbling == 0) {
+                        if (Math.abs(this._cursorPosition.X - e.X) > 3 || Math.abs(this._cursorPosition.Y - e.Y) > 3) {
+                            this.View.ZoomOriginIndex = -1;
 
-                    if (Math.abs(this._cursorPosition.X - e.X) > 3 || Math.abs(this._cursorPosition.Y - e.Y) > 3) {
-                        this.View.ZoomOriginIndex = -1;
+                            this._cursorPosition = new Point(e.X, e.Y);
 
-                        this._cursorPosition = new Point(e.X, e.Y);
+                            this.FocusInfo.RecordIndex = this.XA2Index(e.X);
+                            this.FocusInfo.FocusClosePrice = false;
 
-                        this.FocusInfo.RecordIndex = this.XA2Index(e.X);
-                        this.FocusInfo.FocusClosePrice = false;
+                            this.OnFocusedRecordChanged(Object.assign(new FocusedChangedArgs(),
+                                {
+                                    SeriesRowIndex: this.FocusInfo.RecordIndex,
+                                    X: e.X,
+                                    Y: e.Y
+                                }));
+                        }
 
-                        this.OnFocusedRecordChanged(Object.assign(new FocusedChangedArgs(),
-                            {
-                                SeriesRowIndex: this.FocusInfo.RecordIndex,
-                                X: e.X,
-                                Y: e.Y
-                            }));
+                        this.FocusInfo.FocusLocation = new Point(e.X, e.Y);
                     }
-
-                    this.FocusInfo.FocusLocation = new Point(e.X, e.Y);
                     this.OnPaint(this.Graphics);
                 }
                 if (!Utils.isNull(this.MouseMove))
@@ -446,7 +466,8 @@
             this._cursorPosition = new Point(0, 0);
 
             this.Frame.OnMouseLeave(e);
-            //this.AuxTool.OnMouseLeave(e);
+            if (e.CancelBubbling == 0)
+                this.AuxTool.OnMouseLeave(e);
 
             this.OnPaint(this.Graphics);
 
@@ -558,44 +579,46 @@
         //    }
         //}
 
-        //private _auxiliaryLineTool_PaintFinished(sender: any, e: AuxPaintFinishedArgs): void {
-        //    switch (this.AuxTool.AuxiliaryFunctional) {
-        //        case AuxiliaryFunctional.Statistic:
-        //            if (e.PathPoints != null && e.PathPoints.length == 2) {
-        //                var x1 = Math.min(e.PathPoints[0].X, e.PathPoints[1].X);
-        //                var x2 = Math.max(e.PathPoints[0].X, e.PathPoints[1].X);
-        //                if (x2 - x1 > 10 + this.View.RecordWidth * 2) {
-        //                    var e1 = __init(new StatisticContextMenuArgs(),
-        //                        {
-        //                            Location = e.Location,
-        //                            RecordX1 =this.GetRecordIndex(x1),
-        //                            RecordX2 =this.GetRecordIndex(x2)
-        //                        });
-        //                    this.OnStatisticContextMenu(e1);
-        //                }
-        //            }
-        //            break;
-        //        case AuxiliaryFunctional.Zoom:
-        //            if (e.PathPoints != null && e.PathPoints.length == 2) {
-        //                var x1 = Math.min(e.PathPoints[0].X, e.PathPoints[1].X);
-        //                var x2 = Math.max(e.PathPoints[0].X, e.PathPoints[1].X);
-        //                if (x2 - x1 > 10 + this.View.RecordWidth * 2) {
-        //                    this.Zoom(this.GetRecordIndex(x1) + 1, this.GetRecordIndex(x2));
-        //                }
-        //            }
-        //            break;
-        //        case AuxiliaryFunctional.PaintLine:
-        //            this.AuxTool.Save();
-        //            this._AuxLines = this.FileStore.LoadAuxLines(this.DataID);
-        //            for (var panel in this.Frame.Panels) {
-        //                panel.LoadAuxLines();
-        //            }
-        //            this.Refresh();
-        //            if (this.AuxPaintFinished != null)
-        //                this.AuxPaintFinished.call(sender, e);
-        //            break;
-        //    }
-        //}
+        private AuxiliaryLineTool_PaintFinished(e: AuxPaintFinishedArgs): void {
+            let _this: StockChartView = this.Chart;
+            switch (_this.AuxTool.AuxiliaryFunctional) {
+                case AuxiliaryFunctional.Statistic:
+                    //    if (e.PathPoints != null && e.PathPoints.length == 2) {
+                    //        var x1 = Math.min(e.PathPoints[0].X, e.PathPoints[1].X);
+                    //        var x2 = Math.max(e.PathPoints[0].X, e.PathPoints[1].X);
+                    //        if (x2 - x1 > 10 + this.View.RecordWidth * 2) {
+                    //            var e1 = __init(new StatisticContextMenuArgs(),
+                    //                {
+                    //                    Location = e.Location,
+                    //                    RecordX1 =this.GetRecordIndex(x1),
+                    //                    RecordX2 =this.GetRecordIndex(x2)
+                    //                });
+                    //            this.OnStatisticContextMenu(e1);
+                    //        }
+                    //    }
+                    break;
+                case AuxiliaryFunctional.Zoom:
+                    if (e.PathPoints != null && e.PathPoints.length == 2) {
+                        var x1 = Math.min(e.PathPoints[0].X, e.PathPoints[1].X);
+                        var x2 = Math.max(e.PathPoints[0].X, e.PathPoints[1].X);
+                        if (x2 - x1 > 10 + _this.View.RecordWidth * 2) {
+                            _this.Zoom(_this.XA2Index(x1) + 1, _this.XA2Index(x2));
+                        } else
+                        _this.Refresh();
+                    }
+                    break;
+                case AuxiliaryFunctional.PaintLine:
+                //    this.Chart.AuxTool.Save();
+                //    this._AuxLines = this.FileStore.LoadAuxLines(this.DataID);
+                //    for (var panel in this.Frame.Panels) {
+                //        panel.LoadAuxLines();
+                //    }
+                //    this.Refresh();
+                //    if (this.AuxPaintFinished != null)
+                //        this.AuxPaintFinished.call(sender, e);
+                //    break;
+            }
+        }
 
         private StockChartView_RightClick(sender: any, e: KeyEventArgs): void {
             if (this.View.LeftRecordIndex > this.View.RightRecordIndex) {

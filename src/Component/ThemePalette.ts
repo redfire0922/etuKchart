@@ -10,6 +10,7 @@ namespace zsaltec.KChart {
         public HightlightColor: string;
         public UpCandleColor: string;
         public DownCandleColor: string;
+        public AuxColor : string;
 
         public MajorYScaleLine: string;
         public BackgroundScaleLine: string;
@@ -86,6 +87,7 @@ namespace zsaltec.KChart {
             this.HightlightColor = "#FFFFFF";
             this.UpCandleColor = "#FF3232";
             this.DownCandleColor = "#54FFFF";
+            this.AuxColor = "#C0C0C0";
 
             this.Tip_candleTitleBackgroundColor = "#BDBD17";
             this.Tip_candleBodyBackgroundColor = "#FFFFFF";

@@ -12,7 +12,7 @@
         <div style="display:inline"><input type="button" id="import" value="加载本地数据" style="margin: 5px; " /><div id="p2panel" style="display:inline;margin-left:15px"></div></div>
         <div style="clear:both;"></div>
         <div>
-            <div style="float: left; margin: 5px;  ">数据每行一条记录,一条记录中的数据字段逗号分隔. 第一行为标题, 形如: <b style="font-size: 14px; color: aqua  ">最高价,开盘价,最低价,收盘价,成交量,成交额,日期(yyyy-MM-dd),MA5, ...</b></div>
+            <div style="float: left; margin: 5px;  ">数据每行一条记录,一条记录中的数据字段逗号分隔. 第一行为标题, 形如: <b style="font-size: 14px; color: aqua  ">最高价,开盘价,最低价,收盘价,成交量,成交额,日期(yyyy-MM-dd),MA5, ...</b> 支持键盘操作:上方向放大,下方向缩小</div>
         </div><div style="clear:both;"></div>
     </div>
     <div id="canvas_box">
@@ -86,7 +86,7 @@
                     g.fillRect(x, y, width, height);
                 },
                 DrawRectangle: function (color, x, y, width, height) {
-                    g.fillStyle = color;
+                    g.strokeStyle = color;
                     g.strokeRect(x + 0.5, y + 0.5, width, height);
                 },
                 DrawString(text, color, fontSize, x, y) {

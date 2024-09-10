@@ -23,7 +23,6 @@
         }
         public static DrawRectangle(g: IGraphics, color: string, rec: Rectangle): void {
             g.DrawRectangle(color, rec.X, rec.Y, rec.Width, rec.Height);
-            //g.DrawLine(color, [[rec.X, rec.Y], [rec.X, rec.Y + rec.Height], [rec.X + rec.Width, rec.Y + rec.Height], [rec.X + rec.Width, rec.Y], [rec.X, rec.Y]], 1, undefined);
         }
         public static ChangeCursor(g: IGraphics, cursor: string) {
             g.ChangeCursor(cursor);

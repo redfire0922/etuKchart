@@ -10,9 +10,7 @@ namespace zsaltec.KChart {
         public MinValue: number = 1;
         public PaddingBottom: number = 6;
         public ShowTitle: boolean = true;
-        public Text: string = " ";
-        public Selectable: boolean = true;
-        public Selected: boolean = false;
+        public Text: string = " "; 
         protected _lastCursor: Point = null;
         protected _showMainIndicator: boolean = true;
 

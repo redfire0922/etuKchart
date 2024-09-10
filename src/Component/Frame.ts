@@ -134,7 +134,7 @@ namespace zsaltec.KChart {
                 if (this._panels.length > 0) {
                     var fx: number = this.Chart.FocusInfo.FocusLocation.X;
                     var fy: number = this.Chart.FocusInfo.FocusLocation.Y;
-                    var style = ThemePalette.Current.Color6;
+                    var style = ThemePalette.Current.AuxColor;
                     if (fx - this.MainScaleYWidth >= 0 && fx - this.MainScaleYWidth <= this._panels.Get(0).WorkAreaWidth + 1 && fy < this.WorkAreaHeight - 2) {
                         for (var i = 0; i < this._panels.length; i++) {
                             var panel = this._panels.Get(i);

@@ -1,12 +1,12 @@
 namespace zsaltec.KChart {
 
     export enum MouseButtons {
-        None,
         Left,
-        Right,
         Middle,
+        Right,
         XButton1,
         XButton2,
+        None
     }
 
     export enum ScaleAlignMode {

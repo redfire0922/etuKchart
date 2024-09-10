@@ -6,11 +6,8 @@ namespace zsaltec.KChart {
         public SeriesField: string = CompactSeries.CLOSE_FIELD;
 
         public ShowTitle: boolean = true;
-        public TitleColor: string = null;
-        public IndicatorIndex: number = 0;
-
-        public Selected: boolean = false;
-        public Selectable: boolean = true;
+        public Color: string = null;
+        public IndicatorIndex: number = 0; 
 
         public GroupName: string;
         public CoordinateBaseFirst: boolean = true;
@@ -136,7 +133,7 @@ namespace zsaltec.KChart {
                     if (!Utils.isNull(v))
                         text = v + "";
                 }
-                var titleInfo: TitleInfo = Object.assign(new TitleInfo(this.Alias), { DisplayText: this.Title + ': ' + text, Color: this.TitleColor, Value: v });
+                var titleInfo: TitleInfo = Object.assign(new TitleInfo(this.Alias), { DisplayText: this.Title + ': ' + text, Color: this.Color, Value: v });
                 return [titleInfo];
             }
             return [];
@@ -371,8 +368,8 @@ namespace zsaltec.KChart {
             if (Utils.IsNullOrBlank(this.Title))
                 this.Title = this.SeriesField;
 
-            if (Utils.isNull(this.TitleColor))
-                this.TitleColor = ThemePalette.Current.GetStyleByIndex(this.IndicatorIndex);
+            if (Utils.isNull(this.Color))
+                this.Color = ThemePalette.Current.GetStyleByIndex(this.IndicatorIndex);
 
             this.Inited = true;
         }
@@ -393,10 +390,10 @@ namespace zsaltec.KChart {
                 }
             }
             if (points.length > 1) {
-                Drawer.DrawContinuousLine(g, this.TitleColor, points);
+                Drawer.DrawContinuousLine(g, this.Color, points);
             }
             else if (points.length == 1)
-                Drawer.DrawPoint(g, this.TitleColor, points[0]);
+                Drawer.DrawPoint(g, this.Color, points[0]);
 
         }
 

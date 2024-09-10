@@ -1,31 +1,33 @@
 ﻿namespace zsaltec.KChart {
     export class VisualComponent implements IChartElement {
 
-        public MouseClick: MouseEventHandler;
-        public MouseDoubleClick: MouseEventHandler;
-        public MouseMove: MouseEventHandler;
-        public MouseDown: MouseEventHandler;
-        public MouseUp: MouseEventHandler;
-        public MouseLeave: EventHandler;
-        public MouseEnter: EventHandler;
-        public KeyDown: KeyEventHandler;
-        public KeyUp: KeyEventHandler;
+        public MouseClick: MouseEventHandler = null;
+        public MouseDoubleClick: MouseEventHandler = null;
+        public MouseMove: MouseEventHandler = null;
+        public MouseDown: MouseEventHandler = null;
+        public MouseUp: MouseEventHandler = null;
+        public MouseLeave: EventHandler = null;
+        public MouseEnter: EventHandler = null;
+        public KeyDown: KeyEventHandler = null;
+        public KeyUp: KeyEventHandler = null;
 
-        public ParentVisualComponent: IChartElement;
-        public Width: number;
-        public Height: number;
-        public LocationA: Point;
+        public ParentVisualComponent: IChartElement = null;
+        public Width: number = 0;
+        public Height: number = 0;
+        public LocationA: Point = null;
 
-        public WorkAreaWidth: number;
-        public WorkAreaHeight: number;
-        public WorkAreaLocationA: Point;
+        public WorkAreaWidth: number = 0;
+        public WorkAreaHeight: number = 0;
+        public WorkAreaLocationA: Point = null;
 
-        public Visible: boolean;
-        public Inited: boolean;
+        public Visible: boolean = true;
+        public Selectable = false;
+        public Selected: boolean = false;
+        public Inited: boolean = false;
 
         protected Children: VisualComponent[];
 
-        public Alias: string;
+        public Alias: string = null;
 
         constructor() {
             this.Visible = true;
