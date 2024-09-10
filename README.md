@@ -7,7 +7,7 @@
 
 
 ## 1. 演示地址
-[❤️点击跳转演示地址❤️](http://www.zsaltec.com/static/etukchart)
+[❤️点击跳转演示地址❤️](http://www.zsaltec.com/static/etukchart/index.html)
 
 ## 2. 使用
 
@@ -37,6 +37,10 @@ python -m http.server 8080
 ```
 前七个字段为固定字段,其中(最高价,开盘价,最低价,收盘价,日期)必须有值,不能空着。日期字段格式为 yyyy-MM-dd。后续字段为自定义字段, 可以根据需要自行添加。
 
+<<<<<<< HEAD
 ### 3. 交流学习
 
 QQ群: 494570178
+=======
+ 
+>>>>>>> 2e95b154d52361a546581b199ca3080d27610e3e
