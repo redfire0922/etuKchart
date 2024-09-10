@@ -4,7 +4,7 @@
 当然也可以通过各种行情平台服务AJAX请求获取数据。
 
 ## 1. 演示地址
-[❤️点击跳转演示地址❤️](http://www.zsaltec.com/static/etukchart)
+[❤️点击跳转演示地址❤️](http://www.zsaltec.com/static/etukchart/index.html)
 
 ## 2. 使用
 
