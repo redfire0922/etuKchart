@@ -9,7 +9,7 @@ namespace zsaltec.KChart {
             return Utils.getYear(dt) + '/' + (Utils.getMonth(dt) + '').padStart(2, '0') + '/' + (Utils.getDay(dt) + '').padStart(2, '0');
         }
         public static getMonth(date: Date): number {
-            return date.getMonth();
+            return date.getMonth() + 1;
         }
         public static getYear(date: Date): number {
             return date.getFullYear();
