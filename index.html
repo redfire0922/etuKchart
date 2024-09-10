@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>demo</title>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="./app.js"></script>
+</head>
+<body style="padding: 0; margin: 0; overflow: hidden; font-size: 14px;">
+    <div id="toolbar">
+        <div style="display:inline"><input type="button" id="import" value="加载本地数据" style="margin: 5px; " /><div id="p2panel" style="display:inline;margin-left:15px"></div></div>
+        <div style="clear:both;"></div>
+        <div>
+            <div style="float: left; margin: 5px;  ">数据每行一条记录,一条记录中的数据字段逗号分隔. 第一行为标题, 形如: <b style="font-size: 14px; color: aqua  ">最高价,开盘价,最低价,收盘价,成交量,成交额,日期(yyyy-MM-dd),MA5, ...</b></div>
+        </div><div style="clear:both;"></div>
+    </div>
+    <div id="canvas_box">
+
+    </div>
+    <input type="file" id="files" style="display:none" onchange="loadLocalFile();" />
+    <script>
+        let offCanvas, g, stockChart;
+
+        function createCanvas(w, h) {
+            var box = document.getElementById("canvas_box");
+            if (box.children.length > 0)
+                box.removeChild(box.children.item(0));
+
+            var canvas = document.createElement("canvas");
+            canvas.style.border = "image-rendering: pixelated;";
+            canvas.tabIndex = 0;
+            canvas.id = "myCanvas";
+            box.appendChild(canvas);
+
+            canvas.width = w;
+            canvas.height = h;
+
+            let Offscreen = canvas.transferControlToOffscreen();
+            g = Offscreen.getContext("2d", { willReadFrequently: true, alpha: false });
+
+
+            let left = $('#canvas_box').position().left;
+            let top = $('#canvas_box').position().top;
+            canvas.addEventListener('mousedown', (e) => { stockChart.OnMouseDown(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
+            canvas.addEventListener('mouseup', (e) => { stockChart.OnMouseUp(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
+            canvas.addEventListener('mousemove', (e) => { stockChart.OnMouseMove(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
+            canvas.addEventListener('mouseout', (e) => { stockChart.OnMouseLeave(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
+            canvas.addEventListener('mouseenter', (e) => { stockChart.OnMouseEnter(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
+            canvas.addEventListener('click', (e) => { stockChart.OnMouseClick(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
+            canvas.addEventListener('dblclick', (e) => { stockChart.OnMouseDoubleClick(this, { Button: e.button, X: e.x, Y: e.y - top }); }, false);
+            canvas.addEventListener('keydown', (e) => { stockChart.OnKeyDown(this, { KeyCode: e.keyCode }); }, false);
+            canvas.addEventListener('keyup', (e) => { stockChart.OnKeyUp(this, { KeyCode: e.keyCode }); }, false);
+
+            return canvas;
+        }
+
+        $(document).ready(() => {
+
+            var w = $(window).width();
+            var h = $(window).height() - $('#toolbar').height();
+
+            var graphics = {
+                DrawLine: function (color, pts, lineWidth, dash) {
+                    if (typeof lineWidth == 'undefined')
+                        lineWidth = 1;
+                    if (typeof dash != 'undefined')
+                        g.setLineDash(dash);
+
+                    g.strokeStyle = color;
+                    g.beginPath();
+                    g.lineWidth = lineWidth;
+
+                    g.moveTo(pts[0][0] + 0.5, pts[0][1] + 0.5);
+                    for (var i = 1; i < pts.length; i++) {
+                        g.lineTo(pts[i][0] + 0.5, pts[i][1] + 0.5);
+                    }
+                    g.stroke();
+
+                    if (typeof dash != 'undefined')
+                        g.setLineDash([]);
+
+                },
+                FillRectangle: function (color, x, y, width, height) {
+                    g.fillStyle = color;
+                    g.fillRect(x, y, width, height);
+                },
+                DrawRectangle: function (color, x, y, width, height) {
+                    g.fillStyle = color;
+                    g.strokeRect(x + 0.5, y + 0.5, width, height);
+                },
+                DrawString(text, color, fontSize, x, y) {
+                    g.fillStyle = color;
+                    adsize = fontSize * 1.4;
+                    g.font = adsize + "px Microsoft YaHei";
+                    g.fillText(text, x, y + adsize - 2);
+                },
+                CalTextWidth(text, fontSize) {
+                    adsize = fontSize * 1.4;
+                    g.font = adsize + "px Microsoft YaHei";
+                    return g.measureText(text).width;
+                },
+
+
+                //        //DrawContinuousLine(color: string, pts: Point[]): void;
+                //        //FillEllipse(color: string, point: Point, v1: number, v2: number): void;
+                //        //FillRectangle(color: string, recs: Rectangle): void;
+
+
+                //        //DrawRectangle(color: string, rec: Rectangle): void;
+                //        //
+                //        //DrawPoint(color: string, pt1: Point): void;
+                RenderTo(width, height) {
+                    return g.getImageData(0, 0, width, height);
+                },
+                DrawImage(imgData, width, height) {
+                    g.putImageData(imgData, 0, 0, 0, 0, width, height);
+                },
+                Render() {
+                    //g.commit();
+                },
+                ChangeCursor(cursor) {
+                    var body = document.querySelector("body");
+                    body.style.cursor = cursor;
+                }
+            };
+
+            stockChart = new zsaltec.KChart.StockChartView(w, h, graphics);
+            createCanvas(w, h);
+
+            stockChart.Frame = new zsaltec.KChart.DateLineFrame();
+
+            var panel1 = new zsaltec.KChart.ChartPanel();
+            panel1.Alias = 'panel1';
+            panel1.Patterns.Add(new zsaltec.KChart.CandlePattern());
+            stockChart.AddPanel(panel1);
+
+            var panel2 = new zsaltec.KChart.ChartPanel();
+            panel2.Alias = 'panel2';
+            stockChart.AddPanel(panel2);
+
+            var panel3 = new zsaltec.KChart.ChartPanel();
+            panel3.Alias = 'panel3';
+            stockChart.AddPanel(panel3);
+
+            setInterval(stockChart.OnTimmerTick(), 100);
+
+            stockChart.ChartType = zsaltec.KChart.ChartType.Day;
+            stockChart.InitializeComponent();
+            stockChart.DoLayout();
+
+
+            // 监听窗口大小变化
+            window.addEventListener('resize', () => {
+                var width = $(window).width();
+                var height = $(window).height() - $('#toolbar').height();
+
+                createCanvas(width, height);
+
+                stockChart.Width = width;
+                stockChart.Height = height;
+                stockChart.DoLayout();
+
+            });
+        });
+
+        $("#import").click(function () {//点击导入按钮，使files触发点击事件，然后完成读取文件的操作。
+            $("#files").click();
+        });
+        function removeExtension(filename) {
+            return filename.split('.').slice(0, -1).join('.');
+        }
+
+        function createPatternSelector(field) {
+            var p2panel = document.getElementById('p2panel');
+
+            var title = document.createElement("span");
+            title.innerHTML = "&nbsp;&nbsp;" + field + ": ";
+            p2panel.appendChild(title);
+
+            var select = document.createElement("select");
+            select.addEventListener('change', () => {
+                stockChart.RemovePatternByAlias(field);
+
+                if (select.value != '') {
+                    let linep = new zsaltec.KChart.LinePattern();
+                    linep.SeriesField = field;
+                    linep.Alias = field;
+                    linep.Title = field;
+                    let panel = stockChart.GetPanelByAlias(select.value);
+                    linep.IndicatorIndex = panel.Patterns.length;
+                    if (panel.Alias = 'panel1') linep.IndicatorIndex = linep.IndicatorIndex - 1;
+                    panel.Patterns.Add(linep);
+                }
+
+                stockChart.Refresh();
+            });
+
+            // 创建新的option元素
+            var unknow = document.createElement("option");
+            unknow.text = '不显示'; // 显示文本
+            unknow.value = ''; // 值
+            select.options.add(unknow);
+
+            for (var i = 1; i < 4; i++) {
+                var option = document.createElement("option");
+                option.text = '第' + i + "窗口"; // 显示文本
+                option.value = 'panel' + i; // 值
+                select.options.add(option);
+            }
+            p2panel.appendChild(select);
+        }
+
+        function loadLocalFile() {
+            var files = event.target.files; // 获取文件列表
+            if (files.length > 0) {
+                var selectedFile = files[0];//获取读取的File对象
+                var name = selectedFile.name;//读取选中文件的文件名
+                var size = selectedFile.size;//读取选中文件的大小
+                console.log("文件名:" + name + "大小：" + size);
+
+                var reader = new FileReader();
+                reader.readAsText(selectedFile);
+                // 当读取失败时触发
+                reader.onerror = function (e) {
+                    console.error("文件读取失败:", e.target.error);
+                };
+
+                reader.onload = function (e) {
+                    let text = e.target.result;
+                    // 使用换行符("\n")将文本分割成数组
+                    var lines = text.split('\n');
+
+                    if (lines.length > 0) {
+                        let namelist = [
+                            zsaltec.KChart.CompactSeries.HIGH_FIELD,
+                            zsaltec.KChart.CompactSeries.OPEN_FIELD,
+                            zsaltec.KChart.CompactSeries.LOW_FIELD,
+                            zsaltec.KChart.CompactSeries.CLOSE_FIELD,
+                            zsaltec.KChart.CompactSeries.VOLUME_FIELD,
+                            zsaltec.KChart.CompactSeries.AMOUNT_FIELD,
+                            zsaltec.KChart.CompactSeries.DATETIME_FIELD];
+                        let fieldNames = lines[0].split(',');
+
+                        var p2panel = document.getElementById('p2panel');
+                        p2panel.innerHTML = '';
+
+                        for (var i = 7; i < fieldNames.length; i++) {
+                            let custom = fieldNames[i].trim();
+                            namelist.push(custom);
+                            createPatternSelector(custom);
+                        }
+                        let datalist = [];
+                        for (var i = 1; i < lines.length; i++) {
+                            let values = lines[i].split(',');
+                            let row = [];
+                            for (var n = 0; n < values.length; n++) {
+                                if (n == 6)
+                                    row.push(new Date(values[n].trim()));
+                                else
+                                    row.push(Number.parseFloat(values[n].trim()));
+                            }
+                            datalist.push(row);
+                        }
+
+                        stockChart.LoadData(name, removeExtension(name), zsaltec.KChart.ChartType.Day, namelist, datalist, {});
+                        stockChart.Refresh();
+
+
+                        $("#myCanvas").focus();
+                    }
+                };
+            }
+        }
+    </script>
+</body>
+</html>
