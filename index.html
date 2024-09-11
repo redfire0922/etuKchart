@@ -1,19 +1,27 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <title>demo</title>
     <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script src="app.js"></script>
 </head>
+
 <body style="padding: 0; margin: 0; overflow: hidden; font-size: 14px;">
     <div id="toolbar">
-        <div style="display:inline"><input type="button" id="import" value="加载本地数据" style="margin: 5px; " /><div id="p2panel" style="display:inline;margin-left:15px"></div></div>
+        <div style="display:inline"><input type="button" id="import" value="加载本地数据" style="margin: 5px; " />
+            <div id="p2panel" style="display:inline;margin-left:15px"></div>
+        </div>
         <div style="clear:both;"></div>
         <div>
-            <div style="float: left; margin: 5px;  ">数据每行一条记录,一条记录中的数据字段逗号分隔. 第一行为标题, 形如: <b style="font-size: 14px; color: aqua  ">最高价,开盘价,最低价,收盘价,成交量,成交额,日期(yyyy-MM-dd),MA5, ...</b> 支持键盘操作:上方向放大,下方向缩小</div>
-        </div><div style="clear:both;"></div>
+            <div style="float: left; margin: 5px;  ">数据每行一条记录,一条记录中的数据字段逗号分隔. 第一行为标题, 形如: <b
+                    style="font-size: 14px; color: aqua  ">最高价,开盘价,最低价,收盘价,成交量,成交额,日期(yyyy-MM-dd),MA5, ...</b>
+                支持键盘操作:上方向放大,下方向缩小</div>
+        </div>
+        <div style="clear:both;"></div>
     </div>
     <div id="canvas_box">
 
@@ -170,6 +178,9 @@
         function removeExtension(filename) {
             return filename.split('.').slice(0, -1).join('.');
         }
+        function getExtension(filename) {
+            return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+        }
 
         function createPatternSelector(field) {
             var p2panel = document.getElementById('p2panel');
@@ -216,18 +227,33 @@
             if (files.length > 0) {
                 var selectedFile = files[0];//获取读取的File对象
                 var name = selectedFile.name;//读取选中文件的文件名
+                let extension = getExtension(name);
                 var size = selectedFile.size;//读取选中文件的大小
                 console.log("文件名:" + name + "大小：" + size);
+                if (getExtension(name) == "xls")
+                    alert("请选择xlsx文件");
 
                 var reader = new FileReader();
-                reader.readAsText(selectedFile);
+                if (getExtension(name) == "xlsx")
+                    reader.readAsArrayBuffer(selectedFile);
+                else
+                    reader.readAsText(selectedFile);
+
                 // 当读取失败时触发
                 reader.onerror = function (e) {
                     console.error("文件读取失败:", e.target.error);
                 };
 
                 reader.onload = function (e) {
-                    let text = e.target.result;
+                    let data = e.target.result;
+                    var text = "";
+                    if (extension == "xlsx") {
+                        var workbook = XLSX.read(data);
+                        text = readWorkbook(workbook);
+                    }
+                    else {
+                        text = data;
+                    }
                     // 使用换行符("\n")将文本分割成数组
                     var lines = text.split('\n');
 
@@ -272,6 +298,15 @@
                 };
             }
         }
+
+        function readWorkbook(workbook) {
+            var sheetNames = workbook.SheetNames; // 工作表名称集合
+            var worksheet = workbook.Sheets[sheetNames[0]]; // 这里我们只读取第一张sheet的内容
+
+            csv = XLSX.utils.sheet_to_csv(worksheet, { FS: ',', RS: '\n', blankrows: false });
+            return csv;
+        }
     </script>
 </body>
+
 </html>
