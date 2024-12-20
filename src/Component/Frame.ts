@@ -159,8 +159,7 @@ namespace zsaltec.KChart {
         private ChangeCrosshair(visible: boolean): void {
             if (this.CrosshairVisible != visible) {
                 this.CrosshairVisible = visible;
-                var e2: CrosshairVisibleChangedArgs = new CrosshairVisibleChangedArgs();
-                e2.Visible = this.CrosshairVisible;
+                var e2: CrosshairVisibleChangedArgs = { Visible: this.CrosshairVisible };
 
                 if (!Utils.isNull(this.Chart.CrosshairVisibleChanged)) this.Chart.CrosshairVisibleChanged.call(this, e2);
             }
@@ -229,7 +228,7 @@ namespace zsaltec.KChart {
 
         public override InitializeComponent(): void {
             if (this.XScale == null) {
-                this.XScale = new DateScale(CompactSeries.DATETIME_FIELD);
+                this.XScale = new DateScale();
             }
             this.XScale.InitializeComponent();
 
@@ -512,7 +511,7 @@ namespace zsaltec.KChart {
                     case 2:
                         hp = [0.75, 0.25];
                         for (var i: number = 0; i < count; i++) {
-                            height =this.WorkAreaHeight * hp[i];
+                            height = this.WorkAreaHeight * hp[i];
                             this.PanelBounds.push(Object.assign(new AreaInfo(), {
                                 RowIndex: i,
                                 ColumnIndex: 0,

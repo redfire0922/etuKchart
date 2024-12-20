@@ -10,7 +10,7 @@ namespace zsaltec.KChart {
         public MinValue: number = 1;
         public PaddingBottom: number = 6;
         public ShowTitle: boolean = true;
-        public Text: string = " "; 
+        public Text: string = " ";
         protected _lastCursor: Point = null;
         protected _showMainIndicator: boolean = true;
 
@@ -372,8 +372,7 @@ namespace zsaltec.KChart {
                     if (this.Selectable) {
                         this.Selected = true;
 
-                        var e2: PanelSelectChangedArgs = new PanelSelectChangedArgs();
-                        e2.SelectedPanel = this;
+                        var e2: PanelSelectChangedArgs = { SelectedPanel: this };
                         if (!Utils.isNull(this.Chart.PanelSelectChanged)) this.Chart.PanelSelectChanged.call(this, e2);
 
                         this.Chart.Refresh();
@@ -381,11 +380,10 @@ namespace zsaltec.KChart {
                 }
                 else if (e.Button == MouseButtons.Right) {
                     if (e.X > this.WorkAreaLocationA.X && e.X < this.WorkAreaLocationA.X + this.WorkAreaWidth && e.Y > this.WorkAreaLocationA.Y && e.Y < this.WorkAreaLocationA.Y + this.WorkAreaHeight) {
-                        this.Chart.OnPanelContextMenu(Object.assign(new PanelContextMenuArgs(), {
+                        this.Chart.OnPanelContextMenu({
                             SelectedPanel: this,
-                            X: e.X,
-                            Y: e.Y
-                        }));
+                            Location: new Point(e.X, e.Y)
+                        });
                     }
                 }
 

@@ -6,10 +6,9 @@ namespace zsaltec.KChart {
         public DatetimeField: string = CompactSeries.DATETIME_FIELD;
         public StepInfos: ScaleXInfo[] = [];
 
-        constructor(datetimeField: string) {
+        constructor() {
             super();
-
-            this.DatetimeField = datetimeField;
+ 
         }
 
         public ComputeTempScale(): void { }
@@ -24,8 +23,8 @@ namespace zsaltec.KChart {
 
     export class DateScale extends XScaleBase {
         private _minuteMode: boolean = false;
-        constructor(datetimeFieldName: string) {
-            super(datetimeFieldName);
+        constructor() {
+            super();
 
         }
 

@@ -1,7 +1,7 @@
 ﻿namespace zsaltec.KChart {
     //这个类库提供了一个灵活的网页版框架，用于创建股票K线图。你可以根据需要自定义图表的布局、数据和样式。
     //股票图表的视图。它包含一个ICanvas用于绘制图形，以及一个IFrame用于管理图表的布局。它还提供了一些事件处理方法，如OnSizeChanged、OnKeyDown等。
-    export class StockChartView implements IChartElement {
+    export class KChartView implements IChartElement {
         public MouseClick: MouseEventHandler = null;
         public MouseDoubleClick: MouseEventHandler = null;
         public MouseMove: MouseEventHandler = null;
@@ -29,6 +29,8 @@
         public ChartType: ChartType = ChartType.Day;
         public DataID: string = null;
         public ToolTip: StockToolTip = null;
+        public TouchEnabled: boolean = false;
+
         //public AuxLines: AuxlineStruct[]=null; 
         public PanInterval: number = 1;
 
@@ -73,7 +75,7 @@
         public set ShowCrosshair(value: boolean) {
             if (this._showCrosshair != value) {
                 this._showCrosshair = value;
-                var e2: CrosshairVisibleChangedArgs = Object.assign(new CrosshairVisibleChangedArgs(), { Visible: value });
+                var e2: CrosshairVisibleChangedArgs = { Visible: value };
                 this.OnCrosshairVisibleChanged(e2);
             }
         }
@@ -91,36 +93,52 @@
         //    this._AuxLines = value;
         //}
 
-        public Options: object;
-
+        protected _configs: ChartConfig;
         protected _inited: boolean = false;
         protected _useCachedImage: number = 0;
         protected _bufferImage: any = null;
         protected _mouseDownLocation: Point;
         protected _cursorPosition: Point = new Point(0, 0);
 
-        public constructor(canvasWidth: number, canvasHeight: number, graphics: IGraphics) {
+        public constructor(canvasWidth: number, canvasHeight: number, graphics: IGraphics, configs: ChartConfig) {
             this.Width = canvasWidth;
             this.Height = canvasHeight;
             this.Graphics = graphics;
+            this._configs = configs || <any>{};
+            this.TouchEnabled = configs.touchEnabled || false;
+            this.ChartType = configs.chartType || ChartType.Day;
+
+            let frameCfg: FrameConfig = configs.frame || <any>{};
+            this.Frame = ComLib.Frames.get(frameCfg.type || 'default')();
+
+            let panelsCfg = frameCfg.panels || <any>[];
+            for (let i = 0; i < panelsCfg.length; i++) {
+                let panelCfg: PanelConfig = panelsCfg[i];
+                let panel = ComLib.Panels.get(panelCfg.type || 'default')();
+                panel.Alias = panelCfg.alias || 'panel' + i;
+                this.AddPanel(panel);
+
+                let patternsCfg = panelCfg.patterns || [];
+                for (let j = 0; j < patternsCfg.length; j++) {
+                    let patternCfg: PatternConfig = patternsCfg[j];
+                    let pattern = ComLib.Patterns.get(patternCfg.type || 'default')();
+                    pattern.Alias = patternCfg.alias || 'pattern' + j;
+                    pattern.SeriesField = patternCfg.seriesField || CompactSeries.CLOSE_FIELD;
+                    panel.Patterns.Add(pattern);
+                }
+            }
+            this.Source = configs.source || new CompactSeries(this);
+            this.Source.Chart = this;
+
+            this.View = configs.view || new CandleDataView(this);
+            this.View.Chart = this;
+
+            this.ToolTip = new StockToolTip();
+            this.FocusInfo = new FocusRecordInfo(this);
+            this.AuxTool = new PaintLineTool();
         }
 
         public InitializeComponent(): void {
-
-            if (Utils.isNull(this.Source))
-                this.Source = new CompactSeries(this);
-            if (Utils.isNull(this.Frame))
-                this.Frame = new DateLineFrame();
-            if (Utils.isNull(this.View))
-                this.View = new CandleDataView(this);
-            if (Utils.isNull(this.ToolTip))
-                this.ToolTip = new StockToolTip();
-            if (Utils.isNull(this.FocusInfo))
-                this.FocusInfo = new FocusRecordInfo(this);
-            if (Utils.isNull(this.AuxTool)) {
-                this.AuxTool = new PaintLineTool();
-            }
-
             this.Frame.InitializeComponent();
             this.View.InitializeComponent();
             this.AuxTool.InitializeComponent();
@@ -156,7 +174,8 @@
 
                 this.AuxTool.AfterDoLayout();
                 this.Frame.AfterDoLayout();
-            }
+            } else
+                throw new Error('Width or Height is 0');
             this.Refresh();
         }
 
@@ -263,15 +282,14 @@
             return index;
         }
 
-        public LoadData(dataID: string, dataName: string, type: ChartType, columNames: string[], dataTable: any[][], options: object): void {
+        public LoadData(dataID: string, dataName: string, type: ChartType, columNames: string[], dataTable: any[][]): void {
             this.DataID = dataID;
-            this.Options = options;
 
             if (this.ChartType != type) {
                 this.ChartType = type;
                 if (this.ChartType != ChartType.SecondReport) {
                     let frame = new DateLineFrame();
-                    frame.XScale = new DateScale(CompactSeries.DATETIME_FIELD);
+                    frame.XScale = new DateScale();
                     this.Frame = frame;
 
                     this.DoLayout();
@@ -312,12 +330,12 @@
             this.Frame.ViewUpdating();
 
             if (!Utils.isNull(this.FocusInfo.RecordIndex))
-                this.OnFocusedRecordChanged(Object.assign(new FocusedChangedArgs(),
-                    {
-                        SeriesRowIndex: this.FocusInfo.RecordIndex,
-                        X: this.FocusInfo.FocusLocation.X,
-                        Y: this.FocusInfo.FocusLocation.Y
-                    }));
+                this.OnFocusedRecordChanged({
+                    SeriesRowIndex: this.FocusInfo.RecordIndex,
+                    X: this.FocusInfo.FocusLocation.X,
+                    Y: this.FocusInfo.FocusLocation.Y,
+                    value: 0.0
+                });
         }
 
         public OnPaint(g: IGraphics): void {
@@ -404,12 +422,12 @@
             this.Frame.OnMouseDoubleClick(e);
             //首次显示十字线，触发数据更改
             if (this.ShowCrosshair && tmp != this.ShowCrosshair) {
-                this.OnFocusedRecordChanged(Object.assign(new FocusedChangedArgs(),
-                    {
-                        SeriesRowIndex: this.FocusInfo.RecordIndex,
-                        X: e.X,
-                        Y: e.Y
-                    }));
+                this.OnFocusedRecordChanged({
+                    SeriesRowIndex: this.FocusInfo.RecordIndex,
+                    X: e.X,
+                    Y: e.Y,
+                    value: null
+                });
             }
 
             if (e.CancelBubbling == 0) {
@@ -442,12 +460,12 @@
                             this.FocusInfo.RecordIndex = this.XA2Index(e.X);
                             this.FocusInfo.FocusClosePrice = false;
 
-                            this.OnFocusedRecordChanged(Object.assign(new FocusedChangedArgs(),
-                                {
-                                    SeriesRowIndex: this.FocusInfo.RecordIndex,
-                                    X: e.X,
-                                    Y: e.Y
-                                }));
+                            this.OnFocusedRecordChanged({
+                                SeriesRowIndex: this.FocusInfo.RecordIndex,
+                                X: e.X,
+                                Y: e.Y,
+                                value: null
+                            });
                         }
 
                         this.FocusInfo.FocusLocation = new Point(e.X, e.Y);
@@ -508,10 +526,10 @@
                 this.ShowCrosshair = false;
             }
             else if (e.KeyCode == Keys.Left) {
-                this.StockChartView_LeftClick(this, e);
+                this.KChartView_LeftClick(this, e);
             }
             else if (e.KeyCode == Keys.Right) {
-                this.StockChartView_RightClick(this, e);
+                this.KChartView_RightClick(this, e);
             }
             else if (e.KeyCode == Keys.Up) {
                 this.Zoomin();
@@ -580,7 +598,7 @@
         //}
 
         private AuxiliaryLineTool_PaintFinished(e: AuxPaintFinishedArgs): void {
-            let _this: StockChartView = this.Chart;
+            let _this: KChartView = this.Chart;
             switch (_this.AuxTool.AuxiliaryFunctional) {
                 case AuxiliaryFunctional.Statistic:
                     //    if (e.PathPoints != null && e.PathPoints.length == 2) {
@@ -604,7 +622,7 @@
                         if (x2 - x1 > 10 + _this.View.RecordWidth * 2) {
                             _this.Zoom(_this.XA2Index(x1) + 1, _this.XA2Index(x2));
                         } else
-                        _this.Refresh();
+                            _this.Refresh();
                     }
                     break;
                 case AuxiliaryFunctional.PaintLine:
@@ -620,7 +638,7 @@
             }
         }
 
-        private StockChartView_RightClick(sender: any, e: KeyEventArgs): void {
+        private KChartView_RightClick(sender: any, e: KeyEventArgs): void {
             if (this.View.LeftRecordIndex > this.View.RightRecordIndex) {
                 var recordIndex = 0;
                 if (e.Shift) {
@@ -664,7 +682,7 @@
             }
         }
 
-        private StockChartView_LeftClick(sender: any, e: KeyEventArgs): void {
+        private KChartView_LeftClick(sender: any, e: KeyEventArgs): void {
             if (this.View.LeftRecordIndex > this.View.RightRecordIndex) {
                 var recordIndex = 0;
                 if (e.Shift) {
@@ -742,7 +760,7 @@
         }
         private tipTimeout: number = 0;
         protected _lastCursor: Point = new Point(0, 0);
-        public OnTimmerTick(): void {
+        public OnTimmerTick(...args: any[]): void {
 
             if (this._cursorPosition == this._lastCursor) {
                 this.tipTimeout++;
@@ -770,10 +788,11 @@
                     this.ToolTip.Display = false;
             }
         }
-        public get Chart(): StockChartView {
+        public get Chart(): KChartView {
             return this;
         }
         public ParentVisualComponent: IChartElement;
     }
+
 
 }

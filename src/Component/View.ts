@@ -3,12 +3,12 @@
         public LeftRecordIndex: number;
         public RightRecordIndex: number;
         public RecordWidth: number;
+        public Chart: KChartView;
 
         public PatternWidth: number;
         protected ZoomLevel: number;
         protected DisplayMaxRecordCount: number;
         protected _workAreaWidth: number;
-        protected _chart: StockChartView;
         protected _zoomOriginIndex: number = 0;
         protected ScaleMode: TimeScaleMode;
         protected ShowAllData: number;
@@ -24,7 +24,7 @@
             }
         }
         public get RecordCount(): number {
-            return this._chart.Source.Rows.length;
+            return this.Chart.Source.Rows.length;
         }
         public get ZoomOriginIndex(): number {
             return this._zoomOriginIndex;
@@ -38,8 +38,8 @@
             }
         }
 
-        constructor(chart: StockChartView) {
-            this._chart = chart;
+        constructor(chart: KChartView) {
+            this.Chart = chart;
             this.PatternWidth = 1;
             this.ZoomLevel = 6;
             this.ShowAllData = -1;
@@ -71,7 +71,7 @@
     export class CandleDataView extends DataView {
         private _viewRanges: number[] = [8, 10, 20, 30, 50, 70, 110, 150, 200, 300, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7500, 8500, 10000, 11500, 13000, 15000, 17000, 20000, 23000, 27000, 31000, 35000, 40000, 45000, 50000, 60000, 70000, 90000, 130000];
 
-        constructor(chart: StockChartView) {
+        constructor(chart: KChartView) {
             super(chart);
         }
 
@@ -116,7 +116,7 @@
             }
             else {
                 if (this.ShowAllData >= 0) {
-                    if (this._chart.Source.FullDataComplete == false) {
+                    if (this.Chart.Source.FullDataComplete == false) {
                         this.ZoomLevel = this.CalcGreaterZoomLevel();
                         this.ShowAllData = 1;
                     }

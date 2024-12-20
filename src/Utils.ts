@@ -64,4 +64,64 @@ namespace zsaltec.KChart {
             return origin.toFixed(2);
         }
     }
+
+
+    export class Collection<T extends VisualComponent> {
+        private _list: T[];
+        private _parent: VisualComponent;
+
+        constructor(list: T[], parent: VisualComponent) {
+            this._list = list;
+            this._parent = parent;
+        }
+
+        public Get(index: number): T {
+            return this._list[index];
+        }
+
+        public get length(): number {
+            return this._list.length;
+        }
+
+        public Add(item: T) {
+            this._list.push(item);
+
+            this._parent.AddChild(item);
+        }
+
+        public GetByAlias(alias: string): any {
+            for (var i = 0; i < this._list.length; i++) {
+                if (this._list[i].Alias == alias)
+                    return this._list[i];
+            }
+            return null;
+        }
+
+        public Clear(): void {
+            for (var i = 0; i < this._list.length; i++) {
+                this._parent.RemoveChild(this._list[i]);
+            }
+            this._list = [];
+        }
+        public Remove(p: T | string): void {
+            let obj = p;
+            if ((p instanceof VisualComponent) == false)
+                obj = this.GetByAlias(<string>p);
+
+            this._parent.RemoveChild(<VisualComponent>obj);
+            Utils.remove(this._list, obj);
+        }
+
+        public Insert(index: number, item: T): void {
+            item.ParentVisualComponent = this._parent;
+            Utils.insert(this._list, index, item);
+            this._parent.InsertChild(index, item);
+            if (this._parent.Inited)
+                item.InitializeComponent();
+        }
+
+        public ContainsKey(alias: string): boolean {
+            return Utils.isNull(this.GetByAlias(alias)) == false;
+        }
+    }
 }

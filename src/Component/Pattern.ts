@@ -7,7 +7,7 @@ namespace zsaltec.KChart {
 
         public ShowTitle: boolean = true;
         public Color: string = null;
-        public IndicatorIndex: number = 0; 
+        public IndicatorIndex: number = 0;
 
         public GroupName: string;
         public CoordinateBaseFirst: boolean = true;
@@ -174,13 +174,13 @@ namespace zsaltec.KChart {
             var view: DataView = this.Chart.View;
             var trdateCol: SeriesColumn = this.Chart.Source.Columns.Get(CompactSeries.DATETIME_FIELD);
             var rd: number = view.GetRecordIndex(e.X - this.LocationA.X);
-            let pe = new PatternDbClickEventArgs(e);
-
-            pe.RecordIndex = rd;
-            pe.PanelAlias = (<VisualComponent>this.ParentVisualComponent).Alias;
-            pe.FragmentAlias = this.Alias;
-            pe.SelectedDate = <Date>trdateCol.GetValue(rd);
-
+            let pe: PatternDbClickEventArgs = {
+                ...e,
+                RecordIndex: rd,
+                PanelAlias: (<VisualComponent>this.ParentVisualComponent).Alias,
+                FragmentAlias: this.Alias,
+                SelectedDate: <Date>trdateCol.GetValue(rd)
+            };
             this.Chart.OnPatternDbClick(pe);
             if (!Utils.isNull(this.MouseDoubleClick)) this.MouseDoubleClick.call(this, e);
 

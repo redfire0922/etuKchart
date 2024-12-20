@@ -35,7 +35,7 @@
             this.Alias = "el" + Utils.nextId();
         }
 
-        public get Chart(): StockChartView {
+        public get Chart(): KChartView {
             return this.ParentVisualComponent?.Chart;
         }
 

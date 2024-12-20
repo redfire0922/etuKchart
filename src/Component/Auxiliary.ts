@@ -9,7 +9,7 @@ namespace zsaltec.KChart {
         private _pathPointIndex: number;
         private _path: Point[];
         private _template: AuxPathTemplate;
-          private _lastPoint: Point;
+        private _lastPoint: Point;
         public CanvasPanel: ChartPanel;
 
         private _paintType: number = 0;
@@ -113,11 +113,11 @@ namespace zsaltec.KChart {
                         }
                         if (this._pathPointIndex >= this._template.PathPointCount - 1) {
                             if (this.PaintFinished != null)
-                                this.PaintFinished.call(this, Object.assign(new AuxPaintFinishedArgs(), {
+                                this.PaintFinished.call(this, {
                                     PathPoints: this._path,
                                     Button: e.Button,
                                     Location: new Point(e.X, e.Y)
-                                }));
+                                });
                             this.Reset();
                         }
                     }
@@ -142,7 +142,7 @@ namespace zsaltec.KChart {
                             this.Reset();
                             return
                         }
-                        apinfo = this._template.GetPathPoint(this._pathPointIndex); 
+                        apinfo = this._template.GetPathPoint(this._pathPointIndex);
                     }
                     if (apinfo.MouseAction == MouseAction.MouseMove) {
                         if (apinfo.RecordPosition) {
@@ -164,9 +164,9 @@ namespace zsaltec.KChart {
         public OnMouseUp(e: MouseEventArgs): void {
             super.OnMouseUp(e);
             if (this._template != null) {
-                if ((this._auxiliaryFunctional ==AuxiliaryFunctional.PaintLine && e.Button == MouseButtons.Left) 
-                || (this._auxiliaryFunctional == AuxiliaryFunctional.Zoom && e.Button == MouseButtons.Left)
-             || (this._auxiliaryFunctional == AuxiliaryFunctional.Statistic && e.Button == MouseButtons.Right)) {
+                if ((this._auxiliaryFunctional == AuxiliaryFunctional.PaintLine && e.Button == MouseButtons.Left)
+                    || (this._auxiliaryFunctional == AuxiliaryFunctional.Zoom && e.Button == MouseButtons.Left)
+                    || (this._auxiliaryFunctional == AuxiliaryFunctional.Statistic && e.Button == MouseButtons.Right)) {
                     this._pathPointIndex++;
                     if (this._pathPointIndex > this._template.PathPointCount - 1) {
                         this.Reset();
@@ -180,10 +180,10 @@ namespace zsaltec.KChart {
                         if (this._pathPointIndex >= this._template.PathPointCount - 1) {
                             if (this.PaintFinished != null) {
                                 e.CancelBubbling = 1;
-                                this.PaintFinished.call(this, Object.assign(new AuxPaintFinishedArgs(), {
+                                this.PaintFinished.call(this, {
                                     PathPoints: this._path,
-                                    Location:  new Point(e.X, e.Y)
-                                }));
+                                    Location: new Point(e.X, e.Y)
+                                });
                             }
                             this.Reset();
                         }
@@ -244,24 +244,24 @@ namespace zsaltec.KChart {
         //            }
         //        }
         //    }
-           public override OnPaint(g: IGraphics): void {
-               if (this._pathPointIndex >= 0) {
-                   var al: AuxPatternBase = this._template.GetPathPoint(this._pathPointIndex).AuxLineDrawer;
-                   if (al != null) {
-                       al.Width = this.CanvasPanel.WorkAreaWidth;
-                       al.Height = this.CanvasPanel.WorkAreaHeight;
-                       al.LocationA = this.CanvasPanel.LocationA;
-                       al.DoLayout();
-                       var tmp: Point[] = new Array(this._path.length + 1);
-                       for (var i: number = 0; i < this._path.length; i++) {
-                           tmp[i] = new Point(this._path[i].X, this._path[i].Y);
-                       } 
-                       tmp[tmp.length - 1] = this._lastPoint;
-                       al.CalcCriticalPath(tmp);
-                       al.OnPaint(g);
-                   }
-               }
-           } 
+        public override OnPaint(g: IGraphics): void {
+            if (this._pathPointIndex >= 0) {
+                var al: AuxPatternBase = this._template.GetPathPoint(this._pathPointIndex).AuxLineDrawer;
+                if (al != null) {
+                    al.Width = this.CanvasPanel.WorkAreaWidth;
+                    al.Height = this.CanvasPanel.WorkAreaHeight;
+                    al.LocationA = this.CanvasPanel.LocationA;
+                    al.DoLayout();
+                    var tmp: Point[] = new Array(this._path.length + 1);
+                    for (var i: number = 0; i < this._path.length; i++) {
+                        tmp[i] = new Point(this._path[i].X, this._path[i].Y);
+                    }
+                    tmp[tmp.length - 1] = this._lastPoint;
+                    al.CalcCriticalPath(tmp);
+                    al.OnPaint(g);
+                }
+            }
+        }
     }
 
     export class AuxPathTemplate {
@@ -519,7 +519,7 @@ namespace zsaltec.KChart {
             // this.CriticalPath = null;
             // if ((this.OriginPath.length > 0) && (this.Chart.Source.Rows.length > 0)) {
             //     var paths: Point[] = new Array(this.OriginPath.length);
-            //     var chart: StockChartView = this.Chart;
+            //     var chart: KChartView = this.Chart;
             //     var dv: DataView = chart.View;
             //     var column: SeriesColumn = chart.Source.Columns.Get(CompactSeries.DATETIME_FIELD);
             //     var minutemode: boolean = false;

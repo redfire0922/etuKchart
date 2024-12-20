@@ -8,6 +8,11 @@
     <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
     <script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script src="app.js"></script>
+    <style>
+        html,body {
+           height: 100%;
+        } 
+    </style>
 </head>
 
 <body style="padding: 0; margin: 0; overflow: hidden; font-size: 14px;">
@@ -23,153 +28,53 @@
         </div>
         <div style="clear:both;"></div>
     </div>
-    <div id="canvas_box">
+    <div id="canvas_box" style="height: calc(100% - 81px);width:100%">
 
     </div>
     <input type="file" id="files" style="display:none" onchange="loadLocalFile();" />
     <script>
-        let offCanvas, g, stockChart;
-
-        function createCanvas(w, h) {
-            var box = document.getElementById("canvas_box");
-            if (box.children.length > 0)
-                box.removeChild(box.children.item(0));
-
-            var canvas = document.createElement("canvas");
-            canvas.style.border = "image-rendering: pixelated;";
-            canvas.tabIndex = 0;
-            canvas.id = "myCanvas";
-            box.appendChild(canvas);
-
-            canvas.width = w;
-            canvas.height = h;
-
-            let Offscreen = canvas.transferControlToOffscreen();
-            g = Offscreen.getContext("2d", { willReadFrequently: true, alpha: false });
-
-
-            let left = $('#canvas_box').position().left;
-            let top = $('#canvas_box').position().top;
-            canvas.addEventListener('mousedown', (e) => { stockChart.OnMouseDown(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
-            canvas.addEventListener('mouseup', (e) => { stockChart.OnMouseUp(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
-            canvas.addEventListener('mousemove', (e) => { stockChart.OnMouseMove(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
-            canvas.addEventListener('mouseout', (e) => { stockChart.OnMouseLeave(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
-            canvas.addEventListener('mouseenter', (e) => { stockChart.OnMouseEnter(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
-            canvas.addEventListener('click', (e) => { stockChart.OnMouseClick(this, { Button: e.button, X: e.x - left, Y: e.y - top }); }, false);
-            canvas.addEventListener('dblclick', (e) => { stockChart.OnMouseDoubleClick(this, { Button: e.button, X: e.x, Y: e.y - top }); }, false);
-            canvas.addEventListener('keydown', (e) => { stockChart.OnKeyDown(this, { KeyCode: e.keyCode }); }, false);
-            canvas.addEventListener('keyup', (e) => { stockChart.OnKeyUp(this, { KeyCode: e.keyCode }); }, false);
-
-            return canvas;
-        }
-
-        $(document).ready(() => {
-
-            var w = $(window).width();
-            var h = $(window).height() - $('#toolbar').height();
-
-            var graphics = {
-                DrawLine: function (color, pts, lineWidth, dash) {
-                    if (typeof lineWidth == 'undefined')
-                        lineWidth = 1;
-                    if (typeof dash != 'undefined')
-                        g.setLineDash(dash);
-
-                    g.strokeStyle = color;
-                    g.beginPath();
-                    g.lineWidth = lineWidth;
-
-                    g.moveTo(pts[0][0] + 0.5, pts[0][1] + 0.5);
-                    for (var i = 1; i < pts.length; i++) {
-                        g.lineTo(pts[i][0] + 0.5, pts[i][1] + 0.5);
-                    }
-                    g.stroke();
-
-                    if (typeof dash != 'undefined')
-                        g.setLineDash([]);
-
-                },
-                FillRectangle: function (color, x, y, width, height) {
-                    g.fillStyle = color;
-                    g.fillRect(x, y, width, height);
-                },
-                DrawRectangle: function (color, x, y, width, height) {
-                    g.strokeStyle = color;
-                    g.strokeRect(x + 0.5, y + 0.5, width, height);
-                },
-                DrawString(text, color, fontSize, x, y) {
-                    g.fillStyle = color;
-                    adsize = fontSize * 1.4;
-                    g.font = adsize + "px Microsoft YaHei";
-                    g.fillText(text, x, y + adsize - 2);
-                },
-                CalTextWidth(text, fontSize) {
-                    adsize = fontSize * 1.4;
-                    g.font = adsize + "px Microsoft YaHei";
-                    return g.measureText(text).width;
-                },
-
-
-                //        //DrawContinuousLine(color: string, pts: Point[]): void;
-                //        //FillEllipse(color: string, point: Point, v1: number, v2: number): void;
-                //        //FillRectangle(color: string, recs: Rectangle): void;
-
-
-                //        //DrawRectangle(color: string, rec: Rectangle): void;
-                //        //
-                //        //DrawPoint(color: string, pt1: Point): void;
-                RenderTo(width, height) {
-                    return g.getImageData(0, 0, width, height);
-                },
-                DrawImage(imgData, width, height) {
-                    g.putImageData(imgData, 0, 0, 0, 0, width, height);
-                },
-                Render() {
-                    //g.commit();
-                },
-                ChangeCursor(cursor) {
-                    var body = document.querySelector("body");
-                    body.style.cursor = cursor;
+        let stockChart;
+        
+        $(document).ready(() => { 
+            const canvas =  new zsaltec.KChart.DrawingCanvas('canvas_box', { 
+                touchEnabled:  is_touch_enabled() || false,
+                Frame: {
+                    type: 'default',
+                    panels: [
+                        {
+                            type: 'default',
+                            Alias: 'panel1',
+                            Patterns: [
+                                {
+                                    type: 'candle'
+                                }],
+                            options: {}
+                        }, {
+                            type: 'default',
+                            Alias: 'panel2',
+                            Patterns: [
+                                {
+                                    type: 'default',
+                                    seriesField: "MA5"
+                                }],
+                            options: {}
+                        },
+                        {
+                            type: 'default',
+                            Alias: 'panel3',
+                            Patterns: [
+                                {
+                                    type: 'default',
+                                    seriesField: "MA10"
+                                }],
+                            options: {}
+                        }
+                    ],
+                    options: {}
                 }
-            };
-
-            stockChart = new zsaltec.KChart.StockChartView(w, h, graphics);
-            createCanvas(w, h);
-
-            stockChart.Frame = new zsaltec.KChart.DateLineFrame();
-
-            var panel1 = new zsaltec.KChart.ChartPanel();
-            panel1.Alias = 'panel1';
-            panel1.Patterns.Add(new zsaltec.KChart.CandlePattern());
-            stockChart.AddPanel(panel1);
-
-            var panel2 = new zsaltec.KChart.ChartPanel();
-            panel2.Alias = 'panel2';
-            stockChart.AddPanel(panel2);
-
-            var panel3 = new zsaltec.KChart.ChartPanel();
-            panel3.Alias = 'panel3';
-            stockChart.AddPanel(panel3);
-
-            setInterval(stockChart.OnTimmerTick(), 100);
-
-            stockChart.ChartType = zsaltec.KChart.ChartType.Day;
-            stockChart.InitializeComponent();
-            stockChart.DoLayout();
-
-
-            // 监听窗口大小变化
-            window.addEventListener('resize', () => {
-                var width = $(window).width();
-                var height = $(window).height() - $('#toolbar').height();
-
-                createCanvas(width, height);
-
-                stockChart.Width = width;
-                stockChart.Height = height;
-                stockChart.DoLayout();
-
             });
+
+            stockChart = canvas.KChartView;
         });
 
         $("#import").click(function () {//点击导入按钮，使files触发点击事件，然后完成读取文件的操作。
@@ -305,6 +210,12 @@
 
             csv = XLSX.utils.sheet_to_csv(worksheet, { FS: ',', RS: '\n', blankrows: false });
             return csv;
+        }
+
+        function is_touch_enabled() {
+            return ('ontouchstart' in window) ||
+                (navigator.maxTouchPoints > 0) ||
+                (navigator.msMaxTouchPoints > 0);
         }
     </script>
 </body>

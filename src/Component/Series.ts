@@ -8,13 +8,13 @@
         public static VOLUME_FIELD: string = "VOL";
         public static AMOUNT_FIELD: string = "AMOUNT";
 
-        public Chart: StockChartView;
+        public Chart: KChartView;
         public MinValidIndex: number;
         public FullDataComplete: boolean;
         public Columns: SeriesColumnCollection;
         public Rows: SeriesRowCollection;
 
-        constructor(chart: StockChartView) {
+        constructor(chart: KChartView) {
             this.Columns = new SeriesColumnCollection(this);
             this.Rows = new SeriesRowCollection(this);
 
@@ -79,8 +79,8 @@
         public get length(): number {
             return this._columns.length;
         }
-        public Get(key: string | number): SeriesColumn { 
-            if (typeof key == 'number') { 
+        public Get(key: string | number): SeriesColumn {
+            if (typeof key == 'number') {
                 if (key >= this._columns.length)
                     throw new Error('列索引值超过最大');
                 let col = this._columns[key];
@@ -97,7 +97,7 @@
             this._columns = [];
             this._columnMap = {};
         }
-        public Add(columnName: string): void { 
+        public Add(columnName: string): void {
 
             var column = new SeriesColumn(columnName);
             if (this._columns.length > 0) {
@@ -105,14 +105,14 @@
                     column.AddValue(0.0);
                 }
             }
-            this._columnMap[columnName] = column; 
+            this._columnMap[columnName] = column;
             this._columns.push(column);
         }
 
         public Remove(columnName: string): void {
             var column = this._columnMap[columnName];
             delete this._columnMap[columnName];
-             
+
             Utils.remove(this._columns, column);
         }
 
