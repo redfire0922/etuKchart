@@ -50,7 +50,7 @@ namespace zsaltec.KChart {
 
     export type FocusedChangedArgs = {
         value: number;
-        SeriesRowIndex: number;
+        ChartDataRowIndex: number;
         X: number;
         Y: number;
     };
@@ -106,6 +106,37 @@ namespace zsaltec.KChart {
     export interface IChartElement {
         ParentVisualComponent: IChartElement;
         Chart: KChartView;
+    }
+
+    export interface IChartSeries {
+        //MinValidIndex: number;
+        LoadComplete: boolean;
+
+        get RowCount(): number;
+        GetRow(index: number | Date): ChartDataRow;
+        AddNewRow(): ChartDataRow;
+        InsertNewRow(index: number): ChartDataRow;
+        RemoveRow(index: number): void;
+
+
+        Clear(): void;
+        Reset(): void;
+
+        GetColumn(columnName: string | number): IChartSeriesColumn;
+        AddColumn(column: string | IChartSeriesColumn): void;
+    }
+
+    export interface IChartSeriesColumn {
+        series: IChartSeries;
+        get ColumnName(): string;
+        get length(): number;
+
+        IndexOf(v: any): number;
+        Clear(): void;
+        SetValue(index: number, v: any): void;
+        GetValue(index: number): any;
+        RemoveAt(index: number): void;
+        InsertAt(index: number, v: any): void;
     }
 
     export interface IGraphics {
@@ -235,7 +266,7 @@ namespace zsaltec.KChart {
             if (this._focusRecordIndex != value) {
                 var e: FocusedChangedArgs = {
                     value: null,
-                    SeriesRowIndex: value,
+                    ChartDataRowIndex: value,
                     X: this.FocusLocation.X,
                     Y: this.FocusLocation.Y
                 };
@@ -321,7 +352,6 @@ namespace zsaltec.KChart {
     }
 
     export enum ChartType {
-        SecondReport = 0,
         OneMinute = 1,
         FiveMinute = 5,
         FifMinute = 15,

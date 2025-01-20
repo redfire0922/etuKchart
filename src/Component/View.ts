@@ -24,7 +24,7 @@
             }
         }
         public get RecordCount(): number {
-            return this.Chart.Source.Rows.length;
+            return this.Chart.Source.RowCount;
         }
         public get ZoomOriginIndex(): number {
             return this._zoomOriginIndex;
@@ -116,7 +116,7 @@
             }
             else {
                 if (this.ShowAllData >= 0) {
-                    if (this.Chart.Source.FullDataComplete == false) {
+                    if (this.Chart.Source.LoadComplete == false) {
                         this.ZoomLevel = this.CalcGreaterZoomLevel();
                         this.ShowAllData = 1;
                     }

@@ -3,12 +3,12 @@
 namespace zsaltec.KChart {
     export class XScaleBase extends VisualComponent {
         public PrimaryScales: PrimaryXScaleInfo[] = [];
-        public DatetimeField: string = CompactSeries.DATETIME_FIELD;
+        public DatetimeField: string = EnumBaseFieldName.DATETIME_FIELD;
         public StepInfos: ScaleXInfo[] = [];
 
         constructor() {
             super();
- 
+
         }
 
         public ComputeTempScale(): void { }
@@ -37,8 +37,8 @@ namespace zsaltec.KChart {
 
             this.StepInfos = [];
             var view: DataView = this.Chart.View;
-            if (view.LeftRecordIndex > 0 && this.Chart.Source.Rows.length > 0) {
-                var column: SeriesColumn = this.Chart.Source.Columns.Get(this.DatetimeField);
+            if (view.LeftRecordIndex > 0 && this.Chart.Source.RowCount > 0) {
+                var column: IChartSeriesColumn = this.Chart.Source.GetColumn(this.DatetimeField);
                 if (this.Chart.ChartType == ChartType.Year) {
                     for (var i: number = view.LeftRecordIndex - 1; i >= view.RightRecordIndex; i--) {
                         var v: Date = <Date>column.GetValue(i);
@@ -109,7 +109,7 @@ namespace zsaltec.KChart {
                 }
                 else {
                     var minHours;
-                    for (var i: number = 0; i < 3 && kds * (i + 1) < this.Chart.Source.Rows.length - 1; i++) {
+                    for (var i: number = 0; i < 3 && kds * (i + 1) < this.Chart.Source.RowCount - 1; i++) {
                         var r1 = (<Date>column.GetValue(view.RightRecordIndex + kds * i));
                         var r2 = (<Date>column.GetValue(view.RightRecordIndex + kds * (i + 1)));
                         var tmp = (r1.getTime() - r2.getTime()) / 1000 / 60 / 60;
@@ -175,7 +175,7 @@ namespace zsaltec.KChart {
         }
         public override GetXRecordValue(recordIndex: number): ScaleXInfo {
             var view: DataView = this.Chart.View;
-            var column: SeriesColumn = this.Chart.Source.Columns.Get(this.DatetimeField);
+            var column: IChartSeriesColumn = this.Chart.Source.GetColumn(this.DatetimeField);
             if (recordIndex < view.LeftRecordIndex && recordIndex >= view.RightRecordIndex) {
                 var v: Date = <Date>column.GetValue(recordIndex);
                 var strdate: string = this.FormatDate(v);
@@ -193,7 +193,7 @@ namespace zsaltec.KChart {
             var view: DataView = this.Chart.View;
             var recordIndex: number = view.GetRecordIndex(this.Chart.FocusInfo.FocusLocation.X - this.LocationA.X);
             if (recordIndex < view.LeftRecordIndex && recordIndex >= view.RightRecordIndex) {
-                var column: SeriesColumn = this.Chart.Source.Columns.Get(this.DatetimeField);
+                var column: IChartSeriesColumn = this.Chart.Source.GetColumn(this.DatetimeField);
                 var v: Date = <Date>column.GetValue(recordIndex);
                 if (Utils.isNull(v) == false) {
                     var strdate: string = this.FormatDate(v);
@@ -222,7 +222,7 @@ namespace zsaltec.KChart {
         }
         public override OnPaint(g: IGraphics): void {
             var view: DataView = this.Chart.View;
-            if (view.LeftRecordIndex > 0 && this.Chart.Source.Rows.length > 0) {
+            if (view.LeftRecordIndex > 0 && this.Chart.Source.RowCount > 0) {
                 var frameStyle = ThemePalette.Current.FrameColor;
                 var ox: number = 0;
                 for (var i: number = 0; i < this.StepInfos.length; i++) {

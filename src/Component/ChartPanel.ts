@@ -218,7 +218,7 @@ namespace zsaltec.KChart {
 
         public override OnPaint(g: IGraphics): void {
 
-            if (this.Chart.Source.Rows.length > 0) {
+            if (this.Chart.Source.RowCount > 0) {
                 this._mainScaleY.OnPaint(g);
                 if (Utils.isNotNull(this._secondScaleY)) {
                     this._secondScaleY.OnPaint(g);
@@ -236,7 +236,7 @@ namespace zsaltec.KChart {
             }
         }
         private CalcValueRange(): void {
-            if (this.Chart.Source.Rows.length > 0) {
+            if (this.Chart.Source.RowCount > 0) {
                 this.MaxValue = Number.MIN_VALUE;
                 this.MinValue = Number.MAX_VALUE;
                 for (var i: number = 0; i < this._patterns.length; i++) {
@@ -271,7 +271,7 @@ namespace zsaltec.KChart {
         }
 
         public override OnMouseEnter(e: MouseEventArgs): void {
-            if (this.Chart.Source.Rows.length > 0) {
+            if (this.Chart.Source.RowCount > 0) {
                 if (this.TitleContainer.IsHit(new Point(e.X, e.Y)))
                     this.TitleContainer.OnMouseEnter(e);
                 else if (this._mainScaleY.IsHit(new Point(e.X, e.Y))) {
@@ -291,7 +291,7 @@ namespace zsaltec.KChart {
         }
 
         public override OnMouseDown(e: MouseEventArgs): void {
-            if (this.Chart.Source.Rows.length > 0) {
+            if (this.Chart.Source.RowCount > 0) {
                 if (this.TitleContainer.IsHit(new Point(e.X, e.Y)))
                     this.TitleContainer.OnMouseDown(e);
                 else if (this._mainScaleY.IsHit(new Point(e.X, e.Y))) {
@@ -311,7 +311,7 @@ namespace zsaltec.KChart {
         }
 
         public override OnMouseUp(e: MouseEventArgs): void {
-            if (this.Chart.Source.Rows.length > 0) {
+            if (this.Chart.Source.RowCount > 0) {
                 if (this.TitleContainer.IsHit(new Point(e.X, e.Y)))
                     this.TitleContainer.OnMouseUp(e);
                 else if (this._mainScaleY.IsHit(new Point(e.X, e.Y))) {
@@ -332,7 +332,7 @@ namespace zsaltec.KChart {
 
 
         public override OnMouseDoubleClick(e: MouseEventArgs): void {
-            if (this.Chart.Source.Rows.length > 0) {
+            if (this.Chart.Source.RowCount > 0) {
                 if (this.TitleContainer.IsHit(new Point(e.X, e.Y)))
                     this.TitleContainer.OnMouseDoubleClick(e);
                 else if (this._mainScaleY.IsHit(new Point(e.X, e.Y))) {
@@ -352,7 +352,7 @@ namespace zsaltec.KChart {
         }
 
         public override OnMouseClick(e: MouseEventArgs): void {
-            if (this.Chart.Source.Rows.length > 0) {
+            if (this.Chart.Source.RowCount > 0) {
                 if (this.TitleContainer.IsHit(new Point(e.X, e.Y)))
                     this.TitleContainer.OnMouseClick(e);
                 else if (this._mainScaleY.IsHit(new Point(e.X, e.Y))) {

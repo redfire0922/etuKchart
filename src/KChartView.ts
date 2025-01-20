@@ -55,11 +55,11 @@
                 this._frame.InitializeComponent();
             }
         }
-        protected _auxTool: PaintLineTool;
-        public get AuxTool(): PaintLineTool {
+        protected _auxTool: PaintTool;
+        public get AuxTool(): PaintTool {
             return this._auxTool;
         }
-        public set AuxTool(auxTool: PaintLineTool) {
+        public set AuxTool(auxTool: PaintTool) {
             this._auxTool = auxTool;
             this._auxTool.ParentVisualComponent = this;
             if (this._inited) {
@@ -123,7 +123,7 @@
                     let patternCfg: PatternConfig = patternsCfg[j];
                     let pattern = ComLib.Patterns.get(patternCfg.type || 'default')();
                     pattern.Alias = patternCfg.alias || 'pattern' + j;
-                    pattern.SeriesField = patternCfg.seriesField || CompactSeries.CLOSE_FIELD;
+                    pattern.SeriesField = patternCfg.seriesField || EnumBaseFieldName.CLOSE_FIELD;
                     panel.Patterns.Add(pattern);
                 }
             }
@@ -135,7 +135,7 @@
 
             this.ToolTip = new StockToolTip();
             this.FocusInfo = new FocusRecordInfo(this);
-            this.AuxTool = new PaintLineTool();
+            this.AuxTool = new PaintTool();
         }
 
         public InitializeComponent(): void {
@@ -228,7 +228,7 @@
         }
 
         public ZoomTo(displayLevel: number): void {
-            if (this.Source.Rows.length > 0) {
+            if (this.Source.RowCount > 0) {
                 var oi: number = this.FocusInfo.RecordIndex;
                 if (oi >= 0)
                     this.View.ZoomOriginIndex = oi;
@@ -257,9 +257,9 @@
             this.OnPaint(this.Graphics);
         }
 
-        public GotoDate(date: number, showCount: number): number {
-            var TrdateB = this.Source.Columns.Get(CompactSeries.DATETIME_FIELD);
-            var index = TrdateB.FindSortedValue(date);
+        public GotoDate(date: Date, showCount: number): number {
+            const TrdateB = this.Source.GetColumn(EnumBaseFieldName.DATETIME_FIELD);
+            var index: number = TrdateB.IndexOf(date);
             if (index == -1) {
                 for (var i = 0; i < TrdateB.length; i++) {
                     if (date >= TrdateB.GetValue(i)) {
@@ -285,30 +285,17 @@
         public LoadData(dataID: string, dataName: string, type: ChartType, columNames: string[], dataTable: any[][]): void {
             this.DataID = dataID;
 
-            if (this.ChartType != type) {
-                this.ChartType = type;
-                if (this.ChartType != ChartType.SecondReport) {
-                    let frame = new DateLineFrame();
-                    frame.XScale = new DateScale();
-                    this.Frame = frame;
-
-                    this.DoLayout();
-                }
-            }
-            else {
-                //for (var panel in this.Frame.Panels) {
-                //    panel.ClearAuxLines();
-                //}
-            }
+            this.ChartType = type;
             this.Frame.Panels.Get(0).Text = dataName;
 
-            this.Source = new CompactSeries(this);
+            this.Source.Reset();
+
             for (var i = 0; i < columNames.length; i++) {
                 var name = columNames[i];
-                this.Source.Columns.Add(name);
+                this.Source.AddColumn(name);
             }
             for (var r = 0; r < dataTable.length; r++) {
-                var newRow = this.Source.CreateNewRow();
+                var newRow = this.Source.AddNewRow();
                 for (var c = 0; c < dataTable[r].length; c++) {
                     var value = dataTable[r][c];
                     newRow.Set(c, value);
@@ -319,6 +306,9 @@
             //for (var panel in this.Frame.Panels) {
             //    panel.LoadAuxLines();
             //}
+
+
+            this.DoLayout();
         }
 
         public ClearAllSelected(): void {
@@ -331,7 +321,7 @@
 
             if (!Utils.isNull(this.FocusInfo.RecordIndex))
                 this.OnFocusedRecordChanged({
-                    SeriesRowIndex: this.FocusInfo.RecordIndex,
+                    ChartDataRowIndex: this.FocusInfo.RecordIndex,
                     X: this.FocusInfo.FocusLocation.X,
                     Y: this.FocusInfo.FocusLocation.Y,
                     value: 0.0
@@ -406,7 +396,9 @@
                 this.FocusInfo.FocusLocation = new Point(e.X, e.Y);
 
                 this.Frame.OnMouseClick(e);
-                //this.AuxTool.OnMouseClick(e);
+
+                if (e.CancelBubbling == 0)
+                    this.AuxTool.OnMouseClick(e);
 
                 if (e.CancelBubbling == 0)
                     if (!Utils.isNull(this.MouseClick)) this.MouseClick.call(this, e);
@@ -423,7 +415,7 @@
             //首次显示十字线，触发数据更改
             if (this.ShowCrosshair && tmp != this.ShowCrosshair) {
                 this.OnFocusedRecordChanged({
-                    SeriesRowIndex: this.FocusInfo.RecordIndex,
+                    ChartDataRowIndex: this.FocusInfo.RecordIndex,
                     X: e.X,
                     Y: e.Y,
                     value: null
@@ -461,7 +453,7 @@
                             this.FocusInfo.FocusClosePrice = false;
 
                             this.OnFocusedRecordChanged({
-                                SeriesRowIndex: this.FocusInfo.RecordIndex,
+                                ChartDataRowIndex: this.FocusInfo.RecordIndex,
                                 X: e.X,
                                 Y: e.Y,
                                 value: null
@@ -656,17 +648,17 @@
                     this.ShowCrosshair = true;
                     this.FocusInfo.OutWorkarea = false;
 
-                    if (!this.FocusInfo.FocusClosePrice || this.FocusInfo.RecordIndex > this.View.LeftRecordIndex - 1 || this.FocusInfo.RecordIndex < this.Source.MinValidIndex) {
+                    if (!this.FocusInfo.FocusClosePrice || this.FocusInfo.RecordIndex > this.View.LeftRecordIndex - 1 || this.FocusInfo.RecordIndex < 0) {
                         recordIndex = this.XA2Index(this.FocusInfo.FocusLocation.X);
                         if (recordIndex > this.View.LeftRecordIndex - 1)
                             this.FocusInfo.RecordIndex = this.View.LeftRecordIndex - 1;
-                        else if (recordIndex < this.Source.MinValidIndex)
-                            this.FocusInfo.RecordIndex = this.Source.MinValidIndex;
+                        else if (recordIndex < 0)
+                            this.FocusInfo.RecordIndex = 0;
                         else
                             this.FocusInfo.RecordIndex = recordIndex;
                     }
 
-                    if (this.FocusInfo.RecordIndex > this.Source.MinValidIndex) {
+                    if (this.FocusInfo.RecordIndex > 0) {
                         this.FocusInfo.RecordIndex--;
                         if (this.FocusInfo.RecordIndex < this.View.RightRecordIndex)
                             this.Pan(-1);
@@ -700,12 +692,12 @@
                     this.ShowCrosshair = true;
                     this.FocusInfo.OutWorkarea = false;
 
-                    if (!this.FocusInfo.FocusClosePrice || this.FocusInfo.RecordIndex > this.View.LeftRecordIndex - 1 || this.FocusInfo.RecordIndex < this.Source.MinValidIndex) {
+                    if (!this.FocusInfo.FocusClosePrice || this.FocusInfo.RecordIndex > this.View.LeftRecordIndex - 1 || this.FocusInfo.RecordIndex < 0) {
                         recordIndex = this.XA2Index(this.FocusInfo.FocusLocation.X);
                         if (recordIndex > this.View.LeftRecordIndex - 1)
                             this.FocusInfo.RecordIndex = this.View.LeftRecordIndex - 1;
-                        else if (recordIndex < this.Source.MinValidIndex)
-                            this.FocusInfo.RecordIndex = this.Source.MinValidIndex;
+                        else if (recordIndex < 0)
+                            this.FocusInfo.RecordIndex = 0;
                         else
                             this.FocusInfo.RecordIndex = recordIndex;
                     }
@@ -746,7 +738,7 @@
                 if (this.FocusedRecordChanged != null) {
                     var info: ScaleYInfo = null;
                     if (this.FocusInfo.FocusClosePrice) {
-                        info = this.Frame.Panels.Get(0).GetYRecordInfo(e.SeriesRowIndex);
+                        info = this.Frame.Panels.Get(0).GetYRecordInfo(e.ChartDataRowIndex);
                     }
                     else {
                         info = this.Frame.GetFocusYValue();
@@ -765,7 +757,7 @@
             if (this._cursorPosition == this._lastCursor) {
                 this.tipTimeout++;
                 if (this.tipTimeout > 10) {
-                    if (this.Source.Rows.length > this.View.LeftRecordIndex) {
+                    if (this.Source.RowCount > this.View.LeftRecordIndex) {
                         let pb = this.GetPatternByPoint(this._cursorPosition);
                         if (pb != null) {
                             pb.BuildTip(this._cursorPosition);

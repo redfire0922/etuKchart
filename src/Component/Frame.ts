@@ -404,7 +404,7 @@ namespace zsaltec.KChart {
         }
 
         public override DrawHightlightScaleValue(g: IGraphics): void {
-            if (this.Chart.Source.Rows.length > 0) {
+            if (this.Chart.Source.RowCount > 0) {
                 var ts: ScaleXInfo = null;
                 var ns: ScaleYInfo = null;
                 if (this.Chart.FocusInfo.FocusClosePrice) {

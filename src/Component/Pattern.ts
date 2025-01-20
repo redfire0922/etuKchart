@@ -3,7 +3,7 @@
 namespace zsaltec.KChart {
     export class PatternBase extends VisualComponent {
 
-        public SeriesField: string = CompactSeries.CLOSE_FIELD;
+        public SeriesField: string = EnumBaseFieldName.CLOSE_FIELD;
 
         public ShowTitle: boolean = true;
         public Color: string = null;
@@ -33,7 +33,7 @@ namespace zsaltec.KChart {
         public CalcValueRange(): number[] {
             var maxHigh: number = Number.MIN_VALUE;
             var minLow: number = Number.MAX_VALUE;
-            var col: SeriesColumn = this.Chart.Source.Columns.Get(this.SeriesField);
+            var col: IChartSeriesColumn = this.Chart.Source.GetColumn(this.SeriesField);
             this.MaxHighRecordIndex = -1;
             this.MinLowRecordIndex = -1;
 
@@ -56,18 +56,18 @@ namespace zsaltec.KChart {
         }
 
         public GetYRecordValue(recordIndex: number): number {
-            if (recordIndex >= 0 && recordIndex < this.Chart.Source.Rows.length) {
-                var col: SeriesColumn = this.Chart.Source.Columns.Get(this.SeriesField);
+            if (recordIndex >= 0 && recordIndex < this.Chart.Source.RowCount) {
+                var col: IChartSeriesColumn = this.Chart.Source.GetColumn(this.SeriesField);
                 return col.GetValue(recordIndex);
             }
             return null;
         }
 
         public GetYRecordInfo(recordIndex: number): ScaleYInfo {
-            if (recordIndex >= 0 && recordIndex < this.Chart.Source.Rows.length && this.SeriesField != null) {
+            if (recordIndex >= 0 && recordIndex < this.Chart.Source.RowCount && this.SeriesField != null) {
                 var panel = <ChartPanel>this.ParentVisualComponent;
 
-                var col: SeriesColumn = this.Chart.Source.Columns.Get(this.SeriesField);
+                var col: IChartSeriesColumn = this.Chart.Source.GetColumn(this.SeriesField);
                 var v: number = col.GetValue(recordIndex);
                 var info: ScaleYInfo = Object.assign(new ScaleYInfo(), {
                     AY: this.Value2YA(v),
@@ -90,7 +90,7 @@ namespace zsaltec.KChart {
                 this.Chart.ToolTip.Items = [];
                 var view: DataView = this.Chart.View;
                 var recordIndex: number = view.GetRecordIndex(point.X - this.LocationA.X);
-                var col: SeriesColumn = this.Chart.Source.Columns.Get(this.SeriesField);
+                var col: IChartSeriesColumn = this.Chart.Source.GetColumn(this.SeriesField);
                 var v: number = col.GetValue(recordIndex);
                 this.Chart.ToolTip.GroupName = this.GroupName;
                 this.Chart.ToolTip.Title = this.Title;
@@ -108,7 +108,7 @@ namespace zsaltec.KChart {
                 var step: number = Math.round(50 / view.RecordWidth);
                 if (step == 0)
                     step = 1;
-                var col: SeriesColumn = this.Chart.Source.Columns.Get(this.SeriesField);
+                var col: IChartSeriesColumn = this.Chart.Source.GetColumn(this.SeriesField);
                 var right: number = view.RightRecordIndex;
                 var left: number = view.LeftRecordIndex;
                 for (var i: number = left - step; i >= right; i -= step) {
@@ -152,7 +152,7 @@ namespace zsaltec.KChart {
         public override IsHit(p: Point): boolean {
             var panel: ChartPanel = <ChartPanel>this.ParentVisualComponent;
             var view: DataView = this.Chart.View;
-            var col: SeriesColumn = this.Chart.Source.Columns.Get(this.SeriesField);
+            var col: IChartSeriesColumn = this.Chart.Source.GetColumn(this.SeriesField);
             var rd: number = view.GetRecordIndex(p.X - this.LocationA.X);
             if (rd < view.LeftRecordIndex && rd >= view.RightRecordIndex) {
                 var v: number = col.GetValue(rd);
@@ -172,7 +172,7 @@ namespace zsaltec.KChart {
                 }
 
             var view: DataView = this.Chart.View;
-            var trdateCol: SeriesColumn = this.Chart.Source.Columns.Get(CompactSeries.DATETIME_FIELD);
+            var trdateCol: IChartSeriesColumn = this.Chart.Source.GetColumn(EnumBaseFieldName.DATETIME_FIELD);
             var rd: number = view.GetRecordIndex(e.X - this.LocationA.X);
             let pe: PatternDbClickEventArgs = {
                 ...e,
@@ -190,11 +190,11 @@ namespace zsaltec.KChart {
 
     export class CandlePattern extends PatternBase {
 
-        public HighField: string = CompactSeries.HIGH_FIELD;
-        public LowField: string = CompactSeries.LOW_FIELD;
-        public OpenField: string = CompactSeries.OPEN_FIELD;
-        public VolumeField: string = CompactSeries.VOLUME_FIELD;
-        public AmountField: string = CompactSeries.AMOUNT_FIELD;
+        public HighField: string = EnumBaseFieldName.HIGH_FIELD;
+        public LowField: string = EnumBaseFieldName.LOW_FIELD;
+        public OpenField: string = EnumBaseFieldName.OPEN_FIELD;
+        public VolumeField: string = EnumBaseFieldName.VOLUME_FIELD;
+        public AmountField: string = EnumBaseFieldName.AMOUNT_FIELD;
 
         constructor() {
             super();
@@ -204,8 +204,8 @@ namespace zsaltec.KChart {
         public override CalcValueRange(): number[] {
             var maxHigh: number = Number.MIN_VALUE;
             var minLow: number = Number.MAX_VALUE;
-            var highCol: SeriesColumn = this.Chart.Source.Columns.Get(this.HighField);
-            var lowCol: SeriesColumn = this.Chart.Source.Columns.Get(this.LowField);
+            var highCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.HighField);
+            var lowCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.LowField);
             this.MaxHighRecordIndex = -1;
             this.MinLowRecordIndex = -1;
             for (var i: number = this.Chart.View.RightRecordIndex; i < this.Chart.View.LeftRecordIndex; i++) {
@@ -233,8 +233,8 @@ namespace zsaltec.KChart {
         public override IsHit(p: Point): boolean {
             var panel: ChartPanel = <ChartPanel>this.ParentVisualComponent;
             var view: DataView = this.Chart.View;
-            var highCol: SeriesColumn = this.Chart.Source.Columns.Get(this.HighField);
-            var lowCol: SeriesColumn = this.Chart.Source.Columns.Get(this.LowField);
+            var highCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.HighField);
+            var lowCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.LowField);
             var rd: number = view.GetRecordIndex(p.X - this.LocationA.X);
             if (rd < view.LeftRecordIndex && rd >= view.RightRecordIndex) {
                 var high: number = highCol.GetValue(rd);
@@ -260,13 +260,13 @@ namespace zsaltec.KChart {
             this.Chart.ToolTip.Items = [];
             var view: DataView = this.Chart.View;
             var recordIndex: number = view.GetRecordIndex(point.X - this.LocationA.X);
-            var trdateCol: SeriesColumn = this.Chart.Source.Columns.Get(CompactSeries.DATETIME_FIELD);
-            var highCol: SeriesColumn = this.Chart.Source.Columns.Get(this.HighField);
-            var lowCol: SeriesColumn = this.Chart.Source.Columns.Get(this.LowField);
-            var openCol: SeriesColumn = this.Chart.Source.Columns.Get(this.OpenField);
-            var closeCol: SeriesColumn = this.Chart.Source.Columns.Get(this.SeriesField);
-            var volumnCol: SeriesColumn = this.Chart.Source.Columns.Get(this.VolumeField);
-            var amountCol: SeriesColumn = this.Chart.Source.Columns.Get(this.AmountField);
+            var trdateCol: IChartSeriesColumn = this.Chart.Source.GetColumn(EnumBaseFieldName.DATETIME_FIELD);
+            var highCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.HighField);
+            var lowCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.LowField);
+            var openCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.OpenField);
+            var closeCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.SeriesField);
+            var volumnCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.VolumeField);
+            var amountCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.AmountField);
             var trdate: Date = trdateCol.GetValue(recordIndex);
             var open: number = openCol.GetValue(recordIndex);
             var close: number = closeCol.GetValue(recordIndex);
@@ -288,10 +288,10 @@ namespace zsaltec.KChart {
         public override OnPaint(g: IGraphics): void {
             var view: DataView = this.Chart.View;
             var panel: ChartPanel = <ChartPanel>this.ParentVisualComponent;
-            var highCol: SeriesColumn = this.Chart.Source.Columns.Get(this.HighField);
-            var lowCol: SeriesColumn = this.Chart.Source.Columns.Get(this.LowField);
-            var openCol: SeriesColumn = this.Chart.Source.Columns.Get(this.OpenField);
-            var closeCol: SeriesColumn = this.Chart.Source.Columns.Get(this.SeriesField);
+            var highCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.HighField);
+            var lowCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.LowField);
+            var openCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.OpenField);
+            var closeCol: IChartSeriesColumn = this.Chart.Source.GetColumn(this.SeriesField);
 
             if (view.PatternWidth < 5) {
                 var upStyle = ThemePalette.Current.Color2;
@@ -377,7 +377,7 @@ namespace zsaltec.KChart {
         public override OnPaint(g: IGraphics): void {
             var view: DataView = this.Chart.View;
             var panel: ChartPanel = <ChartPanel>this.ParentVisualComponent;
-            var col: SeriesColumn = this.Chart.Source.Columns.Get(this.SeriesField);
+            var col: IChartSeriesColumn = this.Chart.Source.GetColumn(this.SeriesField);
 
             let points = [];
             for (var i: number = view.RightRecordIndex; i < view.LeftRecordIndex; i++) {

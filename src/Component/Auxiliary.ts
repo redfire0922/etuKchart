@@ -2,7 +2,7 @@
 
 namespace zsaltec.KChart {
 
-    export class PaintLineTool extends VisualComponent {
+    export class PaintTool extends VisualComponent {
         public PaintFinished: AuxPaintFinishedHandler = null;
 
         private _defaultTemplate: AuxPathTemplate;
@@ -10,7 +10,7 @@ namespace zsaltec.KChart {
         private _path: Point[];
         private _template: AuxPathTemplate;
         private _lastPoint: Point;
-        public CanvasPanel: ChartPanel;
+        public ChartPanel: ChartPanel;
 
         private _paintType: number = 0;
         public get PaintType(): number {
@@ -68,7 +68,7 @@ namespace zsaltec.KChart {
         public Reset(): void {
             this._pathPointIndex = -1;
             this._path = [];
-            this.CanvasPanel = null;
+            this.ChartPanel = null;
         }
         public OnMouseDown(e: MouseEventArgs): void {
             if (this.Children)
@@ -89,8 +89,8 @@ namespace zsaltec.KChart {
                     || (this._auxiliaryFunctional == AuxiliaryFunctional.Zoom && e.Button == MouseButtons.Left)
                     || (this._auxiliaryFunctional == AuxiliaryFunctional.Statistic && e.Button == MouseButtons.Right)) {
                     if (this._pathPointIndex < 0) {
-                        this.CanvasPanel = this.Chart.Frame.GetPanelByPoint(new Point(e.X, e.Y));
-                        if (this.CanvasPanel == null) {
+                        this.ChartPanel = this.Chart.Frame.GetPanelByPoint(new Point(e.X, e.Y));
+                        if (this.ChartPanel == null) {
                             this.Reset();
                             return
                         }
@@ -198,15 +198,15 @@ namespace zsaltec.KChart {
         //        if (!Utils.IsNullOrEmpty(this.Chart.DataID)) {
         //            var pis: number[] = new Array(20);
         //            var ok: boolean = true;
-        //            var chart = this._canvasPanel.Chart;
+        //            var chart = this._ChartPanel.Chart;
         //            for (var i: number = 0; i < this._path.length; i++) {
         //                var point = this._path[i];
         //                var x: number = chart.GetRecordIndex(point.X);
         //                if (x < 0 && i != 0) {
-        //                    pis[i * 2] = chart.Source.Columns.Get(CompactSeries.DATETIME_FIELD].GetValue(0);
+        //                    pis[i * 2] = chart.Source.Columns.Get(EnumBaseFieldName.DATETIME_FIELD].GetValue(0);
         //                    var x0: number = chart.GetRecordIndex(this._path[0].X);
         //                    var yp: number = (0 - x) / <number>(x0 - x) * (this._path[0].Y - point.Y) + point.Y;
-        //                    var y: number = this._canvasPanel.GetScaleYValue(<number>yp);
+        //                    var y: number = this._ChartPanel.GetScaleYValue(<number>yp);
         //                    if (y != null)
         //                        pis[i * 2 + 1] = <number>y;
         //                    else {
@@ -215,15 +215,15 @@ namespace zsaltec.KChart {
         //                    }
         //                }
         //                else {
-        //                    if (x < chart.Source.Rows.length && x >= 0) {
-        //                        var tmp: number = chart.Source.Columns.Get(CompactSeries.DATETIME_FIELD].GetValue(x);
+        //                    if (x < chart.Source.RowCount&& x >= 0) {
+        //                        var tmp: number = chart.Source.Columns.Get(EnumBaseFieldName.DATETIME_FIELD].GetValue(x);
         //                        pis[i * 2] = tmp;
         //                    }
         //                    else {
         //                        ok = false;
         //                        break;
         //                    }
-        //                    var y: number = this._canvasPanel.GetScaleYValue(point.Y);
+        //                    var y: number = this._ChartPanel.GetScaleYValue(point.Y);
         //                    if (y != null)
         //                        pis[i * 2 + 1] = <number>(y);
         //                    else {
@@ -236,7 +236,7 @@ namespace zsaltec.KChart {
         //                var astr: AuxlineStruct = Object.assign(new AuxlineStruct(), {
         //                    Id:(new Date())+"" ,
         //                    AuxLinePaintType: this.PaintType,
-        //                    PanelTag: this._canvasPanel.Tag.PadRight(32, ' '),
+        //                    PanelTag: this._ChartPanel.Tag.PadRight(32, ' '),
         //                    PathPointCount: this._path.length,
         //                    Path: pis
         //                });
@@ -248,9 +248,9 @@ namespace zsaltec.KChart {
             if (this._pathPointIndex >= 0) {
                 var al: AuxPatternBase = this._template.GetPathPoint(this._pathPointIndex).AuxLineDrawer;
                 if (al != null) {
-                    al.Width = this.CanvasPanel.WorkAreaWidth;
-                    al.Height = this.CanvasPanel.WorkAreaHeight;
-                    al.LocationA = this.CanvasPanel.LocationA;
+                    al.Width = this.ChartPanel.WorkAreaWidth;
+                    al.Height = this.ChartPanel.WorkAreaHeight;
+                    al.LocationA = this.ChartPanel.LocationA;
                     al.DoLayout();
                     var tmp: Point[] = new Array(this._path.length + 1);
                     for (var i: number = 0; i < this._path.length; i++) {
@@ -517,11 +517,11 @@ namespace zsaltec.KChart {
         }
         public ViewUpdating(): void {
             // this.CriticalPath = null;
-            // if ((this.OriginPath.length > 0) && (this.Chart.Source.Rows.length > 0)) {
+            // if ((this.OriginPath.length > 0) && (this.Chart.Source.RowCount> 0)) {
             //     var paths: Point[] = new Array(this.OriginPath.length);
             //     var chart: KChartView = this.Chart;
             //     var dv: DataView = chart.View;
-            //     var column: SeriesColumn = chart.Source.Columns.Get(CompactSeries.DATETIME_FIELD);
+            //     var column: IChartSeriesColumn = chart.Source.Columns.Get(EnumBaseFieldName.DATETIME_FIELD);
             //     var minutemode: boolean = false;
             //     if (column.GetValue(0).ToString().Length >= 12)
             //         minutemode = true;

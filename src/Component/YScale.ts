@@ -29,7 +29,7 @@ namespace zsaltec.KChart {
 
 
         public override OnPaint(g: IGraphics): void {
-            if (super.Chart.Source != null && super.Chart.Source.Rows.length > 0 && this.NumericSteps.length > 0) {
+            if (super.Chart.Source != null && super.Chart.Source.RowCount > 0 && this.NumericSteps.length > 0) {
                 var oy: number = 0;
                 var frameStyle = ThemePalette.Current.FrameColor;
                 for (var i: number = 0; i < this.NumericSteps.length; i++) {
